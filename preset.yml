@@ -1,0 +1,46 @@
+schema_version: "1.0"
+
+preset:
+  id: "sdd-workflow"
+  name: "SDD Workflow"
+  version: "1.0.0"
+  description: "Replaces spec-kit core commands with an opinionated SDD workflow: feature PRD, techspec, tasks, and implementation with mandatory human approval gates, conventional commits, and roadmap tracking."
+  author: "Felipe Faustini"
+  repository: "https://github.com/faustfelipe/spec-kit-preset-sdd-workflow"
+  license: "MIT"
+
+requires:
+  speckit_version: ">=0.1.0"
+
+provides:
+  templates:
+    - type: "command"
+      name: "speckit.specify"
+      file: "commands/speckit.specify.md"
+      description: "Create a feature-level PRD with clarifying questions and approval gate"
+      replaces: "speckit.specify"
+
+    - type: "command"
+      name: "speckit.plan"
+      file: "commands/speckit.plan.md"
+      description: "Create a technical specification (techspec) for a feature that already has a PRD"
+      replaces: "speckit.plan"
+
+    - type: "command"
+      name: "speckit.tasks"
+      file: "commands/speckit.tasks.md"
+      description: "Break down a techspec into implementation tasks with approval gate before generating files"
+      replaces: "speckit.tasks"
+
+    - type: "command"
+      name: "speckit.implement"
+      file: "commands/speckit.implement.md"
+      description: "Implement one task at a time with test gate, human validation, and two-commit tracking"
+      replaces: "speckit.implement"
+
+tags:
+  - "sdd"
+  - "workflow"
+  - "prd"
+  - "techspec"
+  - "tasks"
