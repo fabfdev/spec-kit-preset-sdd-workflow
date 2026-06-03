@@ -1,6 +1,9 @@
 ---
 description: Break down a feature's PRD and techspec into implementation tasks. Requires approval of the high-level task list before generating any files.
 handoffs:
+  - label: Analyze artifacts first
+    agent: speckit.analyze
+    prompt: Analyze consistency between PRD, techspec, and tasks for this feature.
   - label: Implement Tasks
     agent: speckit.implement
     prompt: Implement task 1.
@@ -14,16 +17,16 @@ $ARGUMENTS
 
 ## Step 1 — Identify the feature
 
-If not specified in `$ARGUMENTS`, ask the user which feature to generate tasks for.
+If not specified in `$ARGUMENTS`, check the current git branch name for `feature/NNN-[slug]` and infer from it. If still unclear, ask the user.
 
 Verify that both files exist before proceeding:
-- `docs/tasks/[feature]/prd.md`
-- `docs/tasks/[feature]/techspec.md`
+- `specs/NNN-[feature-slug]/prd.md`
+- `specs/NNN-[feature-slug]/techspec.md`
 
 ## Step 1.5 — Switch to the feature branch
 
 ```bash
-git checkout feature/prd-[feature-slug]
+git checkout feature/NNN-[feature-slug]
 ```
 
 ## Step 2 — Analyze PRD and techspec
@@ -37,7 +40,7 @@ Read both files and extract: requirements, main components, technical decisions,
 Present the proposed task list in this format:
 
 ```
-## Proposed tasks for [feature]
+## Proposed tasks for NNN-[feature-slug]
 
 - [ ] 1.0 Task title
 - [ ] 2.0 Task title
@@ -52,8 +55,8 @@ Do you approve this structure before I generate the individual files?
 
 After approval:
 
-1. Create `docs/tasks/[feature]/tasks.md` with the approved list
-2. For each main task, create `docs/tasks/[feature]/[N]_task.md` with this structure:
+1. Create `specs/NNN-[feature-slug]/tasks.md` with the approved list
+2. For each main task, create `specs/NNN-[feature-slug]/[N]_task.md` with this structure:
 
 ```markdown
 # Task N.0 — [Title]
@@ -84,8 +87,8 @@ Update `docs/core/roadmap.md`: change status `specced` → `ready` and set task 
 ## Step 6 — Commit
 
 ```bash
-git add docs/tasks/[feature]/tasks.md docs/tasks/[feature]/*_task.md docs/core/roadmap.md
-git commit -m "docs: add tasks for [feature]"
+git add specs/NNN-[feature-slug]/tasks.md specs/NNN-[feature-slug]/*_task.md docs/core/roadmap.md
+git commit -m "docs: add tasks for NNN-[feature-slug]"
 ```
 
 ## Constraints
@@ -95,5 +98,5 @@ git commit -m "docs: add tasks for [feature]"
 - **Do not write code** — only specify tasks and criteria
 - **Logical order:** backend before frontend; both before E2E tests
 - **Tests required:** each task must have test subtasks
-- **Branch required** — checkout `feature/prd-[feature]` before generating any file
+- **Branch required** — checkout `feature/NNN-[feature-slug]` before generating any file
 - **Commit required** — commit all task files + `roadmap.md` with `docs:` prefix

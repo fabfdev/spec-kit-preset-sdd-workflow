@@ -3,10 +3,10 @@ schema_version: "1.0"
 preset:
   id: "sdd-workflow"
   name: "SDD Workflow"
-  version: "1.0.0"
-  description: "Replaces spec-kit core commands with an opinionated SDD workflow: feature PRD, techspec, tasks, and implementation with mandatory human approval gates, conventional commits, and roadmap tracking."
+  version: "1.1.0"
+  description: "Replaces spec-kit core commands with an opinionated SDD workflow: feature PRD, clarify, techspec, analyze, tasks, and implementation with mandatory human approval gates, conventional commits, and roadmap tracking. Features are organized under specs/NNN-[slug]/ with sequential numbering."
   author: "Felipe Faustini"
-  repository: "https://github.com/faustfelipe/spec-kit-preset-sdd-workflow"
+  repository: "https://github.com/fabfdev/spec-kit-preset-sdd-workflow"
   license: "MIT"
 
 requires:
@@ -17,14 +17,26 @@ provides:
     - type: "command"
       name: "speckit.specify"
       file: "commands/speckit.specify.md"
-      description: "Create a feature-level PRD with clarifying questions and approval gate"
+      description: "Create a feature-level PRD with sequential numbering (specs/NNN-[slug]/), clarifying questions, and approval gate"
       replaces: "speckit.specify"
+
+    - type: "command"
+      name: "speckit.clarify"
+      file: "commands/speckit.clarify.md"
+      description: "Identify ambiguities in the feature PRD with up to 5 targeted questions and encode answers back into prd.md"
+      replaces: "speckit.clarify"
 
     - type: "command"
       name: "speckit.plan"
       file: "commands/speckit.plan.md"
       description: "Create a technical specification (techspec) for a feature that already has a PRD"
       replaces: "speckit.plan"
+
+    - type: "command"
+      name: "speckit.analyze"
+      file: "commands/speckit.analyze.md"
+      description: "Validate cross-artifact consistency between prd.md, techspec.md, and tasks.md. Read-only report."
+      replaces: "speckit.analyze"
 
     - type: "command"
       name: "speckit.tasks"

@@ -10,17 +10,15 @@ $ARGUMENTS
 
 ## Step 1 — Identify the task
 
-If not specified in `$ARGUMENTS`, ask:
-- Which feature (directory slug under `docs/tasks/`)
-- Which task number
+If not specified in `$ARGUMENTS`, check the current git branch name for `feature/NNN-[slug]` and infer the feature from it. Then ask which task number to implement.
 
-Target file: `docs/tasks/[feature]/[N]_task.md`
+Target file: `specs/NNN-[feature-slug]/[N]_task.md`
 
 ## Step 2 — Load mandatory context
 
 Read before writing any code:
-1. `docs/tasks/[feature]/[N]_task.md` — requirements, subtasks, acceptance criteria
-2. `docs/tasks/[feature]/techspec.md` — technical decisions for the feature
+1. `specs/NNN-[feature-slug]/[N]_task.md` — requirements, subtasks, acceptance criteria
+2. `specs/NNN-[feature-slug]/techspec.md` — technical decisions for the feature
 3. `docs/core/sdd.md` — base architecture, conventions, project structure (if it exists)
 
 **Do not skip this step.** The `sdd.md` contains critical naming conventions, import patterns, and structural rules.
@@ -75,13 +73,13 @@ Use the appropriate conventional prefix (`feat:`, `fix:`, `refactor:`, etc.).
 
 ## Step 8 — Update tracking and commit separately
 
-1. Mark `- [x]` for the task in `docs/tasks/[feature]/tasks.md`
+1. Mark `- [x]` for the task in `specs/NNN-[feature-slug]/tasks.md`
 2. Increment the counter in `docs/core/roadmap.md`
 3. If this is the last task, update the status to `completed`
 4. **Commit immediately:**
 
 ```bash
-git add docs/tasks/[feature]/tasks.md docs/core/roadmap.md
+git add specs/NNN-[feature-slug]/tasks.md docs/core/roadmap.md
 git commit -m "docs: mark task N.0 as done and update roadmap to (K+1)/N"
 ```
 
@@ -105,7 +103,7 @@ gh pr create \
 
 ```
 Task N.0 committed.
-Roadmap: [Feature] — K/N tasks completed.
+Roadmap: NNN-[feature-slug] — K/N tasks completed.
 
 Next task: N+1.0 — [Title].
 Can I proceed?

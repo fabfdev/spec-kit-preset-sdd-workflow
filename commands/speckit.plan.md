@@ -1,6 +1,9 @@
 ---
 description: Create a technical specification (techspec) for a feature that already has a PRD. Translates requirements into technical decisions.
 handoffs:
+  - label: Clarify PRD first
+    agent: speckit.clarify
+    prompt: Clarify the PRD for this feature before planning.
   - label: Create Tasks
     agent: speckit.tasks
     prompt: Create the implementation tasks for this feature.
@@ -25,20 +28,20 @@ If `docs/core/sdd.md` does not exist, proceed — the techspec will cover stack 
 
 ## Step 1 — Identify the feature
 
-If not specified in `$ARGUMENTS`, ask the user which feature to generate the techspec for.
+If not specified in `$ARGUMENTS`, check the current git branch name for `feature/NNN-[slug]` and infer from it. If still unclear, ask the user.
 
-Verify that `docs/tasks/prd-[feature]/prd.md` exists before proceeding.
+Verify that `specs/NNN-[feature-slug]/prd.md` exists before proceeding.
 
 ## Step 1.5 — Switch to the feature branch
 
 ```bash
-git checkout feature/prd-[feature-slug]
+git checkout feature/NNN-[feature-slug]
 ```
 
 ## Step 2 — Load mandatory context
 
 Read before any generation:
-1. `docs/tasks/[feature]/prd.md` — full feature requirements
+1. `specs/NNN-[feature-slug]/prd.md` — full feature requirements
 2. `docs/core/sdd.md` — base architecture, stack, conventions (if it exists)
 3. Relevant source files from the project (explore current structure to understand existing patterns)
 
@@ -65,7 +68,7 @@ Structure:
 
 **Version:** 1.0
 **Date:** YYYY-MM-DD
-**PRD:** [link to prd.md]
+**PRD:** specs/NNN-[feature-slug]/prd.md
 
 ## 1. Overview
 [Technical summary of what will be built.]
@@ -106,14 +109,14 @@ Show the complete draft to the user and wait for explicit approval before saving
 ## Step 7 — Save and update roadmap
 
 After approval:
-1. Save to `docs/tasks/[feature]/techspec.md`
+1. Save to `specs/NNN-[feature-slug]/techspec.md`
 2. Update `docs/core/roadmap.md`: change status `planning` → `specced`
 
 ## Step 8 — Commit
 
 ```bash
-git add docs/tasks/[feature]/techspec.md docs/core/roadmap.md
-git commit -m "docs: add techspec for [feature]"
+git add specs/NNN-[feature-slug]/techspec.md docs/core/roadmap.md
+git commit -m "docs: add techspec for NNN-[feature-slug]"
 ```
 
 ## Constraints
@@ -122,5 +125,5 @@ git commit -m "docs: add techspec for [feature]"
 - **Present before saving** — explicit approval required
 - **Focus on HOW** — techspec describes implementation; PRD describes what/why
 - **Do not write code** — only specify interfaces, models, and sequence
-- **Branch required** — checkout `feature/prd-[feature]` before saving any file
+- **Branch required** — checkout `feature/NNN-[feature-slug]` before saving any file
 - **Commit required** — commit `techspec.md` + `roadmap.md` with `docs:` prefix

@@ -1,6 +1,9 @@
 ---
-description: Create a feature-level PRD with clarifying questions and mandatory approval before saving.
+description: Create a feature-level PRD with clarifying questions and mandatory approval before saving. Assigns a sequential number to the feature folder (specs/NNN-[slug]/).
 handoffs:
+  - label: Clarify PRD
+    agent: speckit.clarify
+    prompt: Clarify the PRD for this feature.
   - label: Create Techspec
     agent: speckit.plan
     prompt: Create the techspec for this feature.
@@ -25,7 +28,23 @@ If neither file exists, proceed normally — all necessary context will be gathe
 
 If the feature is not clear from `$ARGUMENTS`, ask the user which feature they want to document.
 
-## Step 2 — Clarifying questions
+Derive the feature slug (lowercase, hyphenated, e.g. `user-authentication`).
+
+## Step 2 — Assign sequential number
+
+List existing feature folders to determine the next number:
+
+```bash
+ls specs/ 2>/dev/null | grep -E '^[0-9]{3}-' | sort | tail -1
+```
+
+- If no folders exist yet, start at `001`
+- Otherwise, take the highest number found and increment by 1
+- Zero-pad to 3 digits: `001`, `002`, `003`, ...
+
+The full folder name is: `NNN-[feature-slug]` (e.g. `001-user-authentication`)
+
+## Step 3 — Clarifying questions
 
 Ask the user the following before drafting anything:
 
@@ -37,7 +56,7 @@ Ask the user the following before drafting anything:
 
 Do not skip this step even if the feature description seems complete — the questions capture scope constraints and edge cases.
 
-## Step 3 — Draft the PRD
+## Step 4 — Draft the PRD
 
 Using the answers, draft the feature PRD focused on the **WHAT and WHY** — no implementation details.
 
@@ -49,6 +68,7 @@ Structure:
 **Version:** 1.0
 **Date:** YYYY-MM-DD
 **Status:** Draft
+**Spec:** specs/NNN-[feature-slug]/
 
 ## 1. Overview
 [Problem the feature solves and why it matters.]
@@ -76,45 +96,46 @@ Structure:
 [Anything still unresolved — max 3.]
 ```
 
-## Step 4 — Present for approval
+## Step 5 — Present for approval
 
 Show the complete draft to the user and wait for explicit approval before saving anything.
 
 **Do not save until the user approves.**
 
-## Step 5 — Save and create branch
+## Step 6 — Save and create branch
 
 After approval:
 
-1. Create directory `docs/tasks/prd-[feature-slug]/`
-2. Save to `docs/tasks/prd-[feature-slug]/prd.md`
+1. Create directory `specs/NNN-[feature-slug]/`
+2. Save to `specs/NNN-[feature-slug]/prd.md`
 3. Create and switch to feature branch:
 
 ```bash
-git checkout -b feature/prd-[feature-slug]
+git checkout -b feature/NNN-[feature-slug]
 ```
 
-## Step 6 — Register in roadmap
+## Step 7 — Register in roadmap
 
 Open `docs/core/roadmap.md` and add:
 
 ```
-| [Readable Name] | prd-[feature-slug] | planning | 0/0 |
+| [Readable Name] | NNN-[feature-slug] | planning | 0/0 |
 ```
 
 If `docs/core/roadmap.md` does not exist, create it with a header and this first entry.
 
-## Step 7 — Commit
+## Step 8 — Commit
 
 ```bash
-git add docs/tasks/prd-[feature-slug]/prd.md docs/core/roadmap.md
-git commit -m "docs: add PRD for prd-[feature-slug]"
+git add specs/NNN-[feature-slug]/prd.md docs/core/roadmap.md
+git commit -m "docs: add PRD for NNN-[feature-slug]"
 ```
 
 ## Constraints
 
+- **Number first** — always determine the next sequential number before creating any folder
 - **Questions first** — never skip to drafting
 - **Present before saving** — explicit approval required
 - **Focus on WHAT and WHY** — no technical implementation details
-- **Branch required** — always create `feature/prd-[slug]` after saving
+- **Branch required** — always create `feature/NNN-[slug]` after saving
 - **Commit required** — commit `prd.md` + `roadmap.md` on the feature branch with `docs:` prefix
