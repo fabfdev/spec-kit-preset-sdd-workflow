@@ -21,19 +21,19 @@ Before proceeding, check if these files exist and read them if they do:
 
 ## Step 1 — Identify the feature
 
-If not specified in `$ARGUMENTS`, check the current git branch name for `feature/NNN-[slug]` and infer from it. If still unclear, ask the user.
+If not specified in `$ARGUMENTS`, check the current git branch name for `feature/[slug]` and infer from it. If still unclear, ask the user.
 
-Locate `specs/NNN-[feature-slug]/prd.md`. If it doesn't exist, stop and instruct the user to run `/speckit.specify` first.
+Locate `specs/[feature-slug]/prd.md`. If it doesn't exist, stop and instruct the user to run `/speckit.specify` first.
 
 ## Step 2 — Switch to the feature branch
 
 ```bash
-git checkout feature/NNN-[feature-slug]
+git checkout feature/[feature-slug]
 ```
 
 ## Step 3 — Scan the PRD for ambiguity
 
-Read `specs/NNN-[feature-slug]/prd.md` in full.
+Read `specs/[feature-slug]/prd.md` in full.
 
 Run an internal ambiguity scan across these categories. For each, mark internally: **Clear / Partial / Missing**.
 
@@ -77,7 +77,7 @@ For open-ended questions:
 
 After all questions are answered:
 
-1. Incorporate answers into the relevant sections of `specs/NNN-[feature-slug]/prd.md`
+1. Incorporate answers into the relevant sections of `specs/[feature-slug]/prd.md`
 2. Resolve items in `## 8. Open Questions` — remove resolved ones or mark them answered
 3. Add new content only where needed — do not restructure the entire PRD
 4. If a clarification expands scope, add entries to `## 3. Functional Requirements` (RF-XX) and `## 4. User Scenarios`
@@ -91,8 +91,8 @@ Show a summary of every section changed and what was added or removed. Wait for 
 ## Step 8 — Commit
 
 ```bash
-git add specs/NNN-[feature-slug]/prd.md
-git commit -m "docs: clarify PRD for NNN-[feature-slug]"
+git add specs/[feature-slug]/prd.md
+git commit -m "docs: clarify PRD for [feature-slug]"
 ```
 
 ## Constraints
@@ -102,4 +102,4 @@ git commit -m "docs: clarify PRD for NNN-[feature-slug]"
 - **Update, don't restructure** — preserve existing section headings and requirement IDs (RF-01, etc.)
 - **Approval required** — show what changed before committing
 - **Read-only until approved** — do not modify prd.md until the user approves
-- **Branch required** — checkout `feature/NNN-[slug]` before any file write
+- **Branch required** — checkout `feature/[slug]` before any file write

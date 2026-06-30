@@ -16,12 +16,12 @@ Identify inconsistencies, coverage gaps, and underspecified areas across the thr
 
 ## Step 1 — Identify the feature
 
-If not specified in `$ARGUMENTS`, check the current git branch name for `feature/NNN-[slug]` and infer from it. If still unclear, ask the user.
+If not specified in `$ARGUMENTS`, check the current git branch name for `feature/[slug]` and infer from it. If still unclear, ask the user.
 
 Verify that all three files exist:
-- `specs/NNN-[feature-slug]/prd.md`
-- `specs/NNN-[feature-slug]/techspec.md`
-- `specs/NNN-[feature-slug]/tasks.md`
+- `specs/[feature-slug]/prd.md`
+- `specs/[feature-slug]/techspec.md`
+- `specs/[feature-slug]/tasks.md`
 
 If any are missing, stop and tell the user which command to run first.
 
@@ -95,7 +95,7 @@ If `docs/core/sdd.md` exists, read it in full. Extract:
 Output a Markdown report inline. Do not write it to any file.
 
 ```markdown
-## Analyze Report — NNN-[feature-slug]
+## Analyze Report — [feature-slug]
 
 ### Findings
 

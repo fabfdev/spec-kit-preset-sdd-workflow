@@ -1,5 +1,5 @@
 ---
-description: Create a feature-level PRD with clarifying questions and mandatory approval before saving. Assigns a sequential number to the feature folder (specs/NNN-[slug]/).
+description: Create a feature-level PRD with clarifying questions and mandatory approval before saving. Feature folder is named by slug only (specs/[slug]/).
 handoffs:
   - label: Clarify PRD
     agent: speckit.clarify
@@ -30,19 +30,25 @@ If the feature is not clear from `$ARGUMENTS`, ask the user which feature they w
 
 Derive the feature slug (lowercase, hyphenated, e.g. `user-authentication`).
 
-## Step 2 — Assign sequential number
+## Step 2 — Check for duplicate slug in Notion
 
-List existing feature folders to determine the next number:
+Load `.sdd-notion.json` from the project root and read `database_id`.
 
-```bash
-ls specs/ 2>/dev/null | grep -E '^[0-9]{3}-' | sort | tail -1
+Use the Notion MCP to query the database filtering where the `Slug` property equals the derived slug.
+
+If a page already exists with that slug:
+
+```
+A feature with slug "[slug]" already exists in Notion.
+Status: [current status]
+Notion page: [page URL]
+
+Is this a new feature or a continuation of the existing one?
+- New feature: choose a different slug.
+- Continuation: navigate to the existing feature's PRD at specs/[slug]/prd.md.
 ```
 
-- If no folders exist yet, start at `001`
-- Otherwise, take the highest number found and increment by 1
-- Zero-pad to 3 digits: `001`, `002`, `003`, ...
-
-The full folder name is: `NNN-[feature-slug]` (e.g. `001-user-authentication`)
+Wait for the user's response before proceeding.
 
 ## Step 3 — Clarifying questions
 
@@ -68,7 +74,7 @@ Structure:
 **Version:** 1.0
 **Date:** YYYY-MM-DD
 **Status:** Draft
-**Spec:** specs/NNN-[feature-slug]/
+**Spec:** specs/[feature-slug]/
 
 ## 1. Overview
 [Problem the feature solves and why it matters.]
@@ -106,36 +112,46 @@ Show the complete draft to the user and wait for explicit approval before saving
 
 After approval:
 
-1. Create directory `specs/NNN-[feature-slug]/`
-2. Save to `specs/NNN-[feature-slug]/prd.md`
+1. Create directory `specs/[feature-slug]/`
+2. Save to `specs/[feature-slug]/prd.md`
 3. Create and switch to feature branch:
 
 ```bash
-git checkout -b feature/NNN-[feature-slug]
+git checkout -b feature/[feature-slug]
 ```
 
-## Step 7 — Register in roadmap
+## Step 7 — Register in Notion
 
-Open `docs/core/roadmap.md` and add:
+Use the Notion MCP to create a new page in the database (read `database_id` from `.sdd-notion.json`) with these properties:
+
+- **Name**: [Feature Name]
+- **Type**: Feature
+- **Status**: Planned
+- **Slug**: [feature-slug]
+- **Branch**: feature/[feature-slug]
+- **Tasks Done**: 0
+- **Tasks Total**: 0
+- **Priority**: Medium (adjust if the user specified otherwise)
+
+Then append the following content block to the newly created Notion page:
 
 ```
-| [Readable Name] | NNN-[feature-slug] | planning | 0/0 |
+Spec path: specs/[feature-slug]/
 ```
-
-If `docs/core/roadmap.md` does not exist, create it with a header and this first entry.
 
 ## Step 8 — Commit
 
 ```bash
-git add specs/NNN-[feature-slug]/prd.md docs/core/roadmap.md
-git commit -m "docs: add PRD for NNN-[feature-slug]"
+git add specs/[feature-slug]/prd.md
+git commit -m "docs: add PRD for [feature-slug]"
 ```
 
 ## Constraints
 
-- **Number first** — always determine the next sequential number before creating any folder
+- **Notion check first** — always query Notion for duplicate slug before creating any folder
 - **Questions first** — never skip to drafting
 - **Present before saving** — explicit approval required
 - **Focus on WHAT and WHY** — no technical implementation details
-- **Branch required** — always create `feature/NNN-[slug]` after saving
-- **Commit required** — commit `prd.md` + `roadmap.md` on the feature branch with `docs:` prefix
+- **Branch required** — always create `feature/[slug]` after saving
+- **Commit required** — commit only `prd.md` with `docs:` prefix
+- **Notion registration required** — create Notion page after every approved PRD

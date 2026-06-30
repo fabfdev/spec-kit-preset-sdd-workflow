@@ -28,20 +28,20 @@ If `docs/core/sdd.md` does not exist, proceed — the techspec will cover stack 
 
 ## Step 1 — Identify the feature
 
-If not specified in `$ARGUMENTS`, check the current git branch name for `feature/NNN-[slug]` and infer from it. If still unclear, ask the user.
+If not specified in `$ARGUMENTS`, check the current git branch name for `feature/[slug]` and infer from it. If still unclear, ask the user.
 
-Verify that `specs/NNN-[feature-slug]/prd.md` exists before proceeding.
+Verify that `specs/[feature-slug]/prd.md` exists before proceeding.
 
 ## Step 1.5 — Switch to the feature branch
 
 ```bash
-git checkout feature/NNN-[feature-slug]
+git checkout feature/[feature-slug]
 ```
 
 ## Step 2 — Load mandatory context
 
 Read before any generation:
-1. `specs/NNN-[feature-slug]/prd.md` — full feature requirements
+1. `specs/[feature-slug]/prd.md` — full feature requirements
 2. `docs/core/sdd.md` — base architecture, stack, conventions (if it exists)
 3. Relevant source files from the project (explore current structure to understand existing patterns)
 
@@ -68,7 +68,7 @@ Structure:
 
 **Version:** 1.0
 **Date:** YYYY-MM-DD
-**PRD:** specs/NNN-[feature-slug]/prd.md
+**PRD:** specs/[feature-slug]/prd.md
 
 ## 1. Overview
 [Technical summary of what will be built.]
@@ -106,17 +106,19 @@ Show the complete draft to the user and wait for explicit approval before saving
 
 **Do not save until the user approves.**
 
-## Step 7 — Save and update roadmap
+## Step 7 — Save and update Notion
 
 After approval:
-1. Save to `specs/NNN-[feature-slug]/techspec.md`
-2. Update `docs/core/roadmap.md`: change status `planning` → `specced`
+
+1. Save to `specs/[feature-slug]/techspec.md`
+2. Use the Notion MCP to query the database (read `database_id` from `.sdd-notion.json`) for the page where `Slug` = `[feature-slug]`.
+3. Update that page's `Status` property to `Specced`.
 
 ## Step 8 — Commit
 
 ```bash
-git add specs/NNN-[feature-slug]/techspec.md docs/core/roadmap.md
-git commit -m "docs: add techspec for NNN-[feature-slug]"
+git add specs/[feature-slug]/techspec.md
+git commit -m "docs: add techspec for [feature-slug]"
 ```
 
 ## Constraints
@@ -125,5 +127,6 @@ git commit -m "docs: add techspec for NNN-[feature-slug]"
 - **Present before saving** — explicit approval required
 - **Focus on HOW** — techspec describes implementation; PRD describes what/why
 - **Do not write code** — only specify interfaces, models, and sequence
-- **Branch required** — checkout `feature/NNN-[feature-slug]` before saving any file
-- **Commit required** — commit `techspec.md` + `roadmap.md` with `docs:` prefix
+- **Branch required** — checkout `feature/[feature-slug]` before saving any file
+- **Commit required** — commit only `techspec.md` with `docs:` prefix
+- **Notion update required** — set Status → Specced after saving techspec

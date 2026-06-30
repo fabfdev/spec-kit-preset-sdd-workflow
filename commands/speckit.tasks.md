@@ -17,16 +17,16 @@ $ARGUMENTS
 
 ## Step 1 — Identify the feature
 
-If not specified in `$ARGUMENTS`, check the current git branch name for `feature/NNN-[slug]` and infer from it. If still unclear, ask the user.
+If not specified in `$ARGUMENTS`, check the current git branch name for `feature/[slug]` and infer from it. If still unclear, ask the user.
 
 Verify that both files exist before proceeding:
-- `specs/NNN-[feature-slug]/prd.md`
-- `specs/NNN-[feature-slug]/techspec.md`
+- `specs/[feature-slug]/prd.md`
+- `specs/[feature-slug]/techspec.md`
 
 ## Step 1.5 — Switch to the feature branch
 
 ```bash
-git checkout feature/NNN-[feature-slug]
+git checkout feature/[feature-slug]
 ```
 
 ## Step 2 — Analyze PRD and techspec
@@ -40,7 +40,7 @@ Read both files and extract: requirements, main components, technical decisions,
 Present the proposed task list in this format:
 
 ```
-## Proposed tasks for NNN-[feature-slug]
+## Proposed tasks for [feature-slug]
 
 - [ ] 1.0 Task title
 - [ ] 2.0 Task title
@@ -55,8 +55,8 @@ Do you approve this structure before I generate the individual files?
 
 After approval:
 
-1. Create `specs/NNN-[feature-slug]/tasks.md` with the approved list
-2. For each main task, create `specs/NNN-[feature-slug]/[N]_task.md` with this structure:
+1. Create `specs/[feature-slug]/tasks.md` with the approved list
+2. For each main task, create `specs/[feature-slug]/[N]_task.md` with this structure:
 
 ```markdown
 # Task N.0 — [Title]
@@ -78,17 +78,21 @@ After approval:
 - Files to modify: [list]
 ```
 
-## Step 5 — Update roadmap
+## Step 5 — Update Notion
 
 After generating all files:
 
-Update `docs/core/roadmap.md`: change status `specced` → `ready` and set task count `0/N`.
+Use the Notion MCP to query the database (read `database_id` from `.sdd-notion.json`) for the page where `Slug` = `[feature-slug]`.
+
+Update that page:
+- `Status` → `Ready`
+- `Tasks Total` → N (total number of main tasks generated)
 
 ## Step 6 — Commit
 
 ```bash
-git add specs/NNN-[feature-slug]/tasks.md specs/NNN-[feature-slug]/*_task.md docs/core/roadmap.md
-git commit -m "docs: add tasks for NNN-[feature-slug]"
+git add specs/[feature-slug]/tasks.md specs/[feature-slug]/*_task.md
+git commit -m "docs: add tasks for [feature-slug]"
 ```
 
 ## Constraints
@@ -98,5 +102,6 @@ git commit -m "docs: add tasks for NNN-[feature-slug]"
 - **Do not write code** — only specify tasks and criteria
 - **Logical order:** backend before frontend; both before E2E tests
 - **Tests required:** each task must have test subtasks
-- **Branch required** — checkout `feature/NNN-[feature-slug]` before generating any file
-- **Commit required** — commit all task files + `roadmap.md` with `docs:` prefix
+- **Branch required** — checkout `feature/[feature-slug]` before generating any file
+- **Commit required** — commit all task files with `docs:` prefix
+- **Notion update required** — set Status → Ready and Tasks Total → N after generating files
