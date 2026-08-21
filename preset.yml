@@ -3,7 +3,7 @@ schema_version: "1.0"
 preset:
   id: "sdd-workflow"
   name: "SDD Workflow"
-  version: "1.2.0"
+  version: "1.3.0"
   description: "Replaces spec-kit core commands with an opinionated SDD workflow: feature PRD, clarify, techspec, analyze, tasks, and implementation with mandatory human approval gates, conventional commits, and Notion Kanban tracking. Features are organized under specs/[slug]/ with Notion as the source of truth for status and history."
   author: "Felipe Faustini"
   repository: "https://github.com/fabfdev/spec-kit-preset-sdd-workflow"

@@ -25,7 +25,17 @@ If not specified in `$ARGUMENTS`, check the current git branch name for `feature
 
 Locate `specs/[feature-slug]/prd.md`. If it doesn't exist, stop and instruct the user to run `/speckit.specify` first.
 
-## Step 2 — Switch to the feature branch
+## Step 2 — Verify the branch isn't checked out elsewhere
+
+Run `git worktree list --porcelain` and check if `feature/[feature-slug]` is already checked out in a worktree.
+
+- If it is, and its path differs from the current directory: stop and tell the user:
+  ```
+  This feature has a dedicated worktree at [path].
+  Run this command from there instead of the current directory.
+  ```
+  Do not attempt `git checkout` — Git refuses to check out a branch that's already checked out in another worktree, so it would just fail.
+- If no worktree holds this branch (feature predates the worktree convention, or its worktree was already removed by `/speckit.sdd-workflow.finish`): proceed with the checkout below.
 
 ```bash
 git checkout feature/[feature-slug]
