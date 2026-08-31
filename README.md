@@ -15,7 +15,7 @@ A [Spec Kit](https://github.com/github/spec-kit) preset that replaces the four c
 | Isolation | Not managed | Auto-creates a dedicated git worktree (`.worktrees/[slug]`) on branch `feature/[slug]` |
 | Approval gates | Not enforced | Required before every file save and every commit |
 | Commit style | Not enforced | Conventional commits (`feat:`, `docs:`, `fix:`, `refactor:`) |
-| Progress tracking | Not included | Notion Kanban page auto-updated at every phase (via the companion extension) |
+| Progress tracking | Not included | Local `docs/kanban/feature-[slug].md` (one markdown file per item) updated at every phase; `git log` is the history |
 | Implementation commits | Single commit | Two-commit discipline: code first, tracking second |
 | Architecture context | `memory/constitution.md` (principles) | `docs/core/sdd.md` (architecture, stack, conventions) |
 | `clarify` command | Generic spec ambiguity scan | Adapted for PRD: scans RF-XX, user scenarios, business rules |
@@ -28,13 +28,13 @@ A [Spec Kit](https://github.com/github/spec-kit) preset that replaces the four c
 ```mermaid
 flowchart TD
     SP["/speckit.specify\nCreate feature PRD"]
-    SP --> F1["specs/slug/prd.md\nworktree: .worktrees/slug (branch feature/slug)\nNotion: planning"]
+    SP --> F1["specs/slug/prd.md\ndocs/kanban/feature-slug.md\nworktree: .worktrees/slug (branch feature/slug)\nstatus: planned"]
 
     F1 --> CL["/speckit.clarify ✦ optional\nRefine PRD ambiguities"]
     CL --> F1b["prd.md updated\ncommit: docs: clarify PRD"]
 
     F1b --> PL["/speckit.plan\nCreate techspec"]
-    PL --> F2["specs/slug/techspec.md\nNotion: specced"]
+    PL --> F2["specs/slug/techspec.md\nstatus: specced"]
 
     F2 --> AN["/speckit.analyze ✦ read-only\nValidate consistency"]
     AN --> CHK{Issues?}
@@ -42,14 +42,14 @@ flowchart TD
     FIX --> PL
     CHK -->|None / LOW| TA["/speckit.tasks\nGenerate task files"]
 
-    TA --> F3["specs/slug/tasks.md\n+ 1_task.md ... N_task.md\nNotion: ready"]
+    TA --> F3["specs/slug/tasks.md\n+ 1_task.md ... N_task.md\nstatus: ready"]
 
     F3 --> IM["/speckit.implement N\nImplement task N"]
     IM --> C1["commit 1: code only\nfeat/fix/refactor"]
-    C1 --> C2["commit 2: tracking\ntasks.md + Notion update"]
+    C1 --> C2["commit 2: tracking\ntasks.md + docs/kanban entry"]
     C2 --> MORE{More tasks?}
     MORE -->|Yes| IM
-    MORE -->|No| PR["speckit.sdd-workflow.finish\nmerge PR, remove worktree, Notion: completed"]
+    MORE -->|No| PR["speckit.sdd-workflow.finish\nmerge PR, remove worktree, status: completed"]
 ```
 
 ---
@@ -58,7 +58,7 @@ flowchart TD
 
 | Command | Artifact produced | Description |
 |---------|------------------|--------------|
-| `/speckit.specify` | `specs/[slug]/prd.md` | Drafts the feature PRD with RF-XX requirements, creates a dedicated worktree (`.worktrees/[slug]`) on branch `feature/[slug]`, and registers it in Notion |
+| `/speckit.specify` | `specs/[slug]/prd.md` | Drafts the feature PRD with RF-XX requirements, creates a dedicated worktree (`.worktrees/[slug]`) on branch `feature/[slug]`, and registers it in `docs/kanban/feature-[slug].md` |
 | `/speckit.clarify` | updates `prd.md` | Scans PRD for ambiguity, asks up to 5 targeted questions one at a time, encodes answers back into prd.md |
 | `/speckit.plan` | `specs/[slug]/techspec.md` | Translates PRD into technical decisions — reads `sdd.md` when available |
 | `/speckit.analyze` | report (no file) | Read-only consistency check across prd + techspec + tasks; `sdd.md` conflicts are always CRITICAL |
@@ -67,7 +67,7 @@ flowchart TD
 
 `clarify`, `plan`, and `tasks` also check whether the feature's branch is already checked out in another worktree before touching git — if so, they point you at the worktree path instead of failing with a raw git error.
 
-To close out a finished feature (merge its PR, remove the worktree, update Notion, return to `main`), or to see and switch between everything currently in progress, use the companion extension's `/speckit.sdd-workflow.finish` and `/speckit.sdd-workflow.worktrees` — see below.
+To close out a finished feature (merge its PR, remove the worktree, update the kanban entry, return to `main`), or to see and switch between everything currently in progress, use the companion extension's `/speckit.sdd-workflow.finish` and `/speckit.sdd-workflow.worktrees` — see below.
 
 ---
 
@@ -82,7 +82,7 @@ To close out a finished feature (merge its PR, remove the worktree, update Notio
 
 ```bash
 specify preset add sdd-workflow \
-  --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/v1.3.1.zip
+  --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/v2.0.0.zip
 ```
 
 ### Install preset + companion extension (recommended)
@@ -92,11 +92,11 @@ The extension adds product PRD, architecture document, bug/tech-debt tracking, a
 ```bash
 # replace core commands with SDD workflow
 specify preset add sdd-workflow \
-  --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/v1.3.1.zip
+  --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/v2.0.0.zip
 
 # add inception, health, and worktree lifecycle commands
 specify extension add sdd-workflow \
-  --from https://github.com/fabfdev/spec-kit-extension-sdd-workflow/archive/refs/tags/v1.3.1.zip
+  --from https://github.com/fabfdev/spec-kit-extension-sdd-workflow/archive/refs/tags/v2.0.0.zip
 ```
 
 ---
@@ -108,7 +108,7 @@ specify extension add sdd-workflow \
 If you installed the companion extension:
 
 ```
-/speckit.sdd-workflow.setup          → scaffolds docs/ structure + Notion Kanban database
+/speckit.sdd-workflow.setup          → scaffolds docs/ structure, incl. docs/kanban/ (local tracking)
 /speckit.sdd-workflow.product-prd    → docs/core/prd.md  (vision, personas, business rules)
 /speckit.sdd-workflow.sdd            → docs/core/sdd.md  (stack, architecture, conventions)
 ```
@@ -133,7 +133,7 @@ Run these from inside the feature's worktree (`cd .worktrees/slug`), or open a n
 With the companion extension installed:
 
 ```
-/speckit.sdd-workflow.finish   → merges the PR (squash), removes the worktree, updates Notion, returns to main
+/speckit.sdd-workflow.finish   → merges the PR (squash), removes the worktree, updates the kanban entry, returns to main
 ```
 
 ### Maintenance
@@ -156,7 +156,7 @@ With the companion extension installed:
   After approval:
     → specs/user-auth/prd.md
     → worktree: .worktrees/user-auth (branch feature/user-auth)
-    → Notion: | User Auth | user-auth | Planned |
+    → docs/kanban/feature-user-auth.md  (status: planned)
 
 # — Refine ambiguities —
 /speckit.clarify
@@ -174,7 +174,7 @@ With the companion extension installed:
   Sections: architecture, data model, interfaces, testing strategy
   After approval:
     → specs/user-auth/techspec.md
-    → Notion: Specced
+    → docs/kanban/feature-user-auth.md  (status: specced)
 
 # — Validate everything before building —
 /speckit.analyze
@@ -193,7 +193,7 @@ With the companion extension installed:
     4.0 Integration tests
 
   After approval → generates 4 task files + tasks.md
-  Notion: Ready
+  docs/kanban/feature-user-auth.md  (status: ready, tasks_total: 4)
 
 # — Implement one task at a time —
 /speckit.implement 1
@@ -203,20 +203,20 @@ With the companion extension installed:
   Presents: "Task 1.0 done. Tests: ✓ passing. Can you validate?"
   After validation:
     → commit 1: "feat: add auth schema and user migration"
-    → commit 2: "docs: mark task 1.0 as done, Notion 1/4"
+    → commit 2: "docs: mark task 1.0 as done"  (kanban tasks_done: 1)
 
 /speckit.implement 2
 /speckit.implement 3
 /speckit.implement 4
   → last task: opens PR automatically
-  → Notion: In Review
+  → docs/kanban/feature-user-auth.md  (status: in-review, pr: <url>)
 
 # — Close it out —
 /speckit.sdd-workflow.finish
 
   Agent: finds the open PR, confirms, squash-merges + deletes remote branch
   Removes .worktrees/user-auth, checks out main, pulls
-  Notion: Completed
+  docs/kanban/feature-user-auth.md  (status: completed)
 ```
 
 ---
@@ -256,22 +256,33 @@ docs/
     sdd.md              ← architecture doc (from companion extension)
   health/
     scan.md             ← health scan guide (from companion extension)
+  kanban/
+    README.md           ← schema + status lifecycle (from companion extension)
+    feature-user-auth.md ← one file per work item: frontmatter + notes; git log is the history
 ```
 
 ---
 
-## Notion status lifecycle
+## Status lifecycle
 
-Tracked on the feature's Kanban page (via the companion extension) — not a local file.
+Tracked in `docs/kanban/feature-[slug].md` frontmatter (`status:`). The file is committed with the feature, so `git log docs/kanban/feature-[slug].md` is the full history.
 
-| Status | Triggered by |
-|--------|-------------|
-| `Planned` | `/speckit.specify` |
-| `Specced` | `/speckit.plan` |
-| `Ready` | `/speckit.tasks` |
-| `In Progress` | `/speckit.implement` (first task) |
-| `In Review` | `/speckit.implement` (last task, PR opened) |
-| `Completed` | `/speckit.sdd-workflow.finish` (PR merged) |
+| `status` | Triggered by |
+|----------|-------------|
+| `planned` | `/speckit.specify` |
+| `specced` | `/speckit.plan` |
+| `ready` | `/speckit.tasks` |
+| `in-progress` | `/speckit.implement` (first task) |
+| `in-review` | `/speckit.implement` (last task, PR opened) |
+| `completed` | `/speckit.sdd-workflow.finish` (PR merged) |
+
+`abandoned` is available at any point for work that is dropped.
+
+---
+
+## Migrating from v1.x (Notion)
+
+v1.x tracked status and history in a Notion Kanban database. v2 tracks everything locally in `docs/kanban/`. If you have a v1.x project, install the companion extension v2 and run `/speckit.sdd-workflow.import-notion` once — it reads your existing Notion board and writes one `docs/kanban/<type>-<slug>.md` per item. After that, `.sdd-notion.json` and the Notion database are no longer used.
 
 ---
 
@@ -305,13 +316,14 @@ gh release create vX.Y.Z \
 
 This preset pairs with [`spec-kit-extension-sdd-workflow`](https://github.com/fabfdev/spec-kit-extension-sdd-workflow), which adds:
 
-- `/speckit.sdd-workflow.setup` — scaffolds the full `docs/` structure and provisions the Notion Kanban database
+- `/speckit.sdd-workflow.setup` — scaffolds the full `docs/` structure, including `docs/kanban/` (local tracking)
 - `/speckit.sdd-workflow.product-prd` — creates `docs/core/prd.md`
 - `/speckit.sdd-workflow.sdd` — creates `docs/core/sdd.md` (the most critical file)
-- `/speckit.sdd-workflow.fix-bug` — registers bugs in Notion, creates a worktree on `bugfix/[slug]`, fixes, opens a PR
-- `/speckit.sdd-workflow.fix-debt` — registers tech debt in Notion, creates a worktree on `refactor/[slug]`, resolves it, opens a PR
-- `/speckit.sdd-workflow.worktrees` — lists every active worktree (features, bugs, debt) with Notion status, lets you switch into one
-- `/speckit.sdd-workflow.finish` — merges the current worktree's PR, removes it, updates Notion, returns to main
+- `/speckit.sdd-workflow.fix-bug` — registers bugs in `docs/kanban/bug-[slug].md`, creates a worktree on `bugfix/[slug]`, fixes, opens a PR
+- `/speckit.sdd-workflow.fix-debt` — registers tech debt in `docs/kanban/debt-[slug].md`, creates a worktree on `refactor/[slug]`, resolves it, opens a PR
+- `/speckit.sdd-workflow.worktrees` — lists every active worktree (features, bugs, debt) with its kanban status, lets you switch into one
+- `/speckit.sdd-workflow.finish` — merges the current worktree's PR, removes it, updates the kanban entry, returns to main
+- `/speckit.sdd-workflow.import-notion` — one-time migration from a v1.x Notion board into `docs/kanban/`
 
 ---
 

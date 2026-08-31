@@ -88,20 +88,19 @@ After approval:
 - Files to modify: [list]
 ```
 
-## Step 5 — Update Notion
+## Step 5 — Update the kanban entry
 
-After generating all files:
+After generating all files, in `docs/kanban/feature-[feature-slug].md` frontmatter set:
+- `status: ready`
+- `tasks_total:` N (total number of main tasks generated)
+- `updated:` today's date
 
-Use the Notion MCP to query the database (read `database_id` from `.sdd-notion.json`) for the page where `Slug` = `[feature-slug]`.
-
-Update that page:
-- `Status` → `Ready`
-- `Tasks Total` → N (total number of main tasks generated)
+(If the file does not exist, create it following the schema in `docs/kanban/README.md`.)
 
 ## Step 6 — Commit
 
 ```bash
-git add specs/[feature-slug]/tasks.md specs/[feature-slug]/*_task.md
+git add specs/[feature-slug]/tasks.md specs/[feature-slug]/*_task.md docs/kanban/feature-[feature-slug].md
 git commit -m "docs: add tasks for [feature-slug]"
 ```
 
@@ -113,5 +112,5 @@ git commit -m "docs: add tasks for [feature-slug]"
 - **Logical order:** backend before frontend; both before E2E tests
 - **Tests required:** each task must have test subtasks
 - **Branch required** — checkout `feature/[feature-slug]` before generating any file
-- **Commit required** — commit all task files with `docs:` prefix
-- **Notion update required** — set Status → Ready and Tasks Total → N after generating files
+- **Commit required** — commit all task files and the kanban entry with `docs:` prefix
+- **Kanban update required** — set `status: ready` and `tasks_total: N` in `docs/kanban/feature-[slug].md` after generating files

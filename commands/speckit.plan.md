@@ -116,18 +116,17 @@ Show the complete draft to the user and wait for explicit approval before saving
 
 **Do not save until the user approves.**
 
-## Step 7 — Save and update Notion
+## Step 7 — Save and update the kanban entry
 
 After approval:
 
 1. Save to `specs/[feature-slug]/techspec.md`
-2. Use the Notion MCP to query the database (read `database_id` from `.sdd-notion.json`) for the page where `Slug` = `[feature-slug]`.
-3. Update that page's `Status` property to `Specced`.
+2. In `docs/kanban/feature-[feature-slug].md` frontmatter, set `status: specced` and `updated:` to today's date. (If the file does not exist — feature predates the kanban convention — create it now following the schema in `docs/kanban/README.md`.)
 
 ## Step 8 — Commit
 
 ```bash
-git add specs/[feature-slug]/techspec.md
+git add specs/[feature-slug]/techspec.md docs/kanban/feature-[feature-slug].md
 git commit -m "docs: add techspec for [feature-slug]"
 ```
 
@@ -138,5 +137,5 @@ git commit -m "docs: add techspec for [feature-slug]"
 - **Focus on HOW** — techspec describes implementation; PRD describes what/why
 - **Do not write code** — only specify interfaces, models, and sequence
 - **Branch required** — checkout `feature/[feature-slug]` before saving any file
-- **Commit required** — commit only `techspec.md` with `docs:` prefix
-- **Notion update required** — set Status → Specced after saving techspec
+- **Commit required** — commit `techspec.md` and the kanban entry with `docs:` prefix
+- **Kanban update required** — set `status: specced` in `docs/kanban/feature-[slug].md` after saving techspec
