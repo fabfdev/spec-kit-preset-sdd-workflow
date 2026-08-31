@@ -53,9 +53,9 @@ Wait for the user's response before proceeding.
 If continuation, locate the existing worktree:
 
 1. Read the `Worktree Path` property from the Notion page (if the property exists and is not empty).
-2. Verify it still exists: run `git worktree list --porcelain` and confirm a `worktree [path]` entry is present.
+2. Verify it still exists: run `git worktree list` and confirm a line starting with that path is present. Each line is `<path> <sha> [<branch>]`; do not pass `--porcelain` (command wrappers in some setups strip it — the default format carries everything this command needs).
 3. If confirmed, `cd` into that path before continuing — the rest of this command (and any follow-up command) now operates inside the worktree.
-4. If `Worktree Path` is empty (project set up before this property existed) or the path no longer matches a real worktree, fall back to: run `git worktree list --porcelain` and find the entry whose branch is `feature/[slug]`. If found, `cd` into it. If no worktree exists at all for this branch, tell the user the feature predates the worktree convention and continue in the current directory.
+4. If `Worktree Path` is empty (project set up before this property existed) or the path no longer matches a real worktree, fall back to: run `git worktree list` and find the line whose `[<branch>]` is `[feature/[slug]]`. If found, `cd` into its path. If no worktree exists at all for this branch, tell the user the feature predates the worktree convention and continue in the current directory.
 
 ## Step 3 — Clarifying questions
 
@@ -119,7 +119,7 @@ Show the complete draft to the user and wait for explicit approval before saving
 
 After approval:
 
-1. Check idempotency before creating anything: run `git worktree list --porcelain` and check for an entry whose branch is `feature/[feature-slug]`. Also check if the local branch already exists (`git branch --list feature/[feature-slug]`).
+1. Check idempotency before creating anything: run `git worktree list` (each line is `<path> <sha> [<branch>]`) and check for a line whose `[<branch>]` is `[feature/[feature-slug]]`. Also check if the local branch already exists (`git branch --list feature/[feature-slug]`).
    - If a worktree already exists for this branch: `cd` into it and skip straight to substep 4 below (do not create a new worktree).
    - If the branch exists but has no worktree: `git worktree add .worktrees/[feature-slug] feature/[feature-slug]` (no `-b` — attach the existing branch instead of creating a new one).
    - If neither exists: proceed normally with substep 2.

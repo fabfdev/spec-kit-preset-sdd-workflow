@@ -27,7 +27,7 @@ Locate `specs/[feature-slug]/prd.md`. If it doesn't exist, stop and instruct the
 
 ## Step 2 — Verify the branch isn't checked out elsewhere
 
-Run `git worktree list --porcelain` and check if `feature/[feature-slug]` is already checked out in a worktree.
+Run `git worktree list` (each line is `<path> <sha> [<branch>]`; do not pass `--porcelain` — command wrappers in some setups strip it) and check if `feature/[feature-slug]` appears as a `[<branch>]` in a worktree line.
 
 - If it is, and its path differs from the current directory: stop and tell the user:
   ```

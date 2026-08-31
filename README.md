@@ -82,7 +82,7 @@ To close out a finished feature (merge its PR, remove the worktree, update Notio
 
 ```bash
 specify preset add sdd-workflow \
-  --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/v1.3.0.zip
+  --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/v1.3.1.zip
 ```
 
 ### Install preset + companion extension (recommended)
@@ -92,11 +92,11 @@ The extension adds product PRD, architecture document, bug/tech-debt tracking, a
 ```bash
 # replace core commands with SDD workflow
 specify preset add sdd-workflow \
-  --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/v1.3.0.zip
+  --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/v1.3.1.zip
 
 # add inception, health, and worktree lifecycle commands
 specify extension add sdd-workflow \
-  --from https://github.com/fabfdev/spec-kit-extension-sdd-workflow/archive/refs/tags/v1.3.0.zip
+  --from https://github.com/fabfdev/spec-kit-extension-sdd-workflow/archive/refs/tags/v1.3.1.zip
 ```
 
 ---
