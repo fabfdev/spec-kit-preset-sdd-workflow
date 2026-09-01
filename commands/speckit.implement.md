@@ -23,13 +23,11 @@ Read before writing any code:
 
 **Do not skip this step.** The `sdd.md` contains critical naming conventions, import patterns, and structural rules.
 
-## Step 3 — Update Notion to In Progress (first task only)
+## Step 3 — Mark the kanban entry In Progress (first task only)
 
-Use the Notion MCP to query the database (read `database_id` from `.sdd-notion.json`) for the page where `Slug` = `[feature-slug]`.
+In `docs/kanban/feature-[feature-slug].md` frontmatter: if `status` is `ready`, set it to `in-progress` and bump `updated:` to today.
 
-If the page `Status` is `Ready`, update it to `In Progress`.
-
-Skip this step if status is already `In Progress`.
+Skip this step if `status` is already `in-progress`. Commit this change together with the tracking commit in Step 8.
 
 ## Step 4 — Implement the task
 
@@ -78,17 +76,15 @@ Use the appropriate conventional prefix (`feat:`, `fix:`, `refactor:`, etc.).
 ## Step 8 — Update tracking and commit separately
 
 1. Mark `- [x]` for the task in `specs/[feature-slug]/tasks.md`
-2. **Commit immediately:**
+2. In `docs/kanban/feature-[feature-slug].md` frontmatter: set `tasks_done:` to K+1, bump `updated:` to today, and apply the Step 3 `status: in-progress` change if it hasn't been committed yet.
+3. **Commit immediately:**
 
 ```bash
-git add specs/[feature-slug]/tasks.md
+git add specs/[feature-slug]/tasks.md docs/kanban/feature-[feature-slug].md
 git commit -m "docs: mark task N.0 as done"
 ```
 
-3. Use the Notion MCP to query the database for the page where `Slug` = `[feature-slug]` and update:
-   - `Tasks Done` → K+1 (increment by 1)
-
-**Never leave `tasks.md` modified without committing.**
+**Never leave `tasks.md` or the kanban entry modified without committing.**
 
 ## Step 9 — Create PR (last task only)
 
@@ -104,15 +100,23 @@ gh pr create \
 [Steps to validate manually]"
 ```
 
-After the PR is created, use the Notion MCP to update the feature page:
-- `Status` → `In Review`
-- `PR URL` → [URL returned by gh pr create]
+After the PR is created, in `docs/kanban/feature-[feature-slug].md` frontmatter set:
+- `status: in-review`
+- `pr:` [URL returned by gh pr create]
+- `updated:` today
+
+Commit it:
+
+```bash
+git add docs/kanban/feature-[feature-slug].md
+git commit -m "docs: [feature-slug] in review"
+```
 
 ## Step 10 — Report and wait for approval
 
 ```
 Task N.0 committed.
-Notion: [feature-slug] — K/N tasks completed. Status updated in Notion.
+Kanban: [feature-slug] — K/N tasks completed. docs/kanban/feature-[feature-slug].md updated.
 
 Next task: N+1.0 — [Title].
 Can I proceed?
@@ -123,7 +127,7 @@ Can I proceed?
 - **Mandatory context:** read `sdd.md` (if exists), `[N]_task.md`, and `techspec.md` before any code
 - **Test gate:** tests passing before presenting to user
 - **Human gate:** explicit approval before any commit
-- **Two commits per task:** 1st commit = code; 2nd commit = `tasks.md`
-- **Tracking always committed:** never leave `tasks.md` modified without committing
-- **Notion update required:** increment Tasks Done after every task; set Status → In Review and PR URL on last task
+- **Two commits per task:** 1st commit = code; 2nd commit = `tasks.md` + kanban entry
+- **Tracking always committed:** never leave `tasks.md` or the kanban entry modified without committing
+- **Kanban update required:** bump `tasks_done` after every task; set `status: in-review` and `pr:` on the last task
 - **No automatic advance:** wait for approval before the next task

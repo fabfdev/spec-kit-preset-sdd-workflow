@@ -39,9 +39,14 @@ product PRD, SDD, bug/tech-debt, worktree lifecycle). Keep conventions in sync.
   - `gh ... --json`, `gh pr merge`, `gh pr create`, `git add/commit`,
     `git worktree add` are all safe — rtk either passes them through or emits a
     faithful confirmation line.
-- **Notion is out of any wrapper's reach.** MCP tool calls (`mcp__notion__*`)
-  are never compacted. When a step queries Notion, ask for the specific page and
-  the specific properties it needs — never "fetch the whole database".
+- **Tracking is local (since v2.0.0).** Status and history live in
+  `docs/kanban/feature-[slug].md` — YAML frontmatter for the structured fields
+  (`status`, `slug`, `branch`, `worktree`, `priority`, `tasks_done`,
+  `tasks_total`, `pr`, `created`, `updated`), markdown body for notes. The file
+  is committed with the feature, so `git log` is the audit trail. The schema is
+  documented in `docs/kanban/README.md`, created by the extension's `setup`; the
+  preset commands create `docs/kanban/` on demand so they also work without the
+  extension. No Notion, no MCP, no `.sdd-notion.json` anywhere in the workflow.
 - **Reference-doc reads**: steps that load `sdd.md` / `prd.md` / `techspec.md`
   for context can use `rtk read <file>` (via Bash) for a first survey pass when
   rtk is present, but the agent should fall back to its native file-read tool

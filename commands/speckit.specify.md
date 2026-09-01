@@ -30,18 +30,19 @@ If the feature is not clear from `$ARGUMENTS`, ask the user which feature they w
 
 Derive the feature slug (lowercase, hyphenated, e.g. `user-authentication`).
 
-## Step 2 — Check for duplicate slug in Notion
+## Step 2 — Check for duplicate slug
 
-Load `.sdd-notion.json` from the project root and read `database_id`.
+A feature is a duplicate if either of these is true:
 
-Use the Notion MCP to query the database filtering where the `Slug` property equals the derived slug.
+- `docs/kanban/feature-[slug].md` already exists.
+- `git worktree list` (each line is `<path> <sha> [<branch>]`) has a line whose `[<branch>]` is `[feature/[slug]]`.
 
-If a page already exists with that slug:
+If a duplicate is found:
 
 ```
-A feature with slug "[slug]" already exists in Notion.
-Status: [current status]
-Notion page: [page URL]
+A feature with slug "[slug]" already exists.
+Status: [status: from docs/kanban/feature-[slug].md, or "branch exists, no kanban file"]
+Kanban entry: docs/kanban/feature-[slug].md
 
 Is this a new feature or a continuation of the existing one?
 - New feature: choose a different slug.
@@ -52,10 +53,10 @@ Wait for the user's response before proceeding.
 
 If continuation, locate the existing worktree:
 
-1. Read the `Worktree Path` property from the Notion page (if the property exists and is not empty).
+1. Read the `worktree:` field from `docs/kanban/feature-[slug].md` frontmatter (if the file exists and the field is not empty).
 2. Verify it still exists: run `git worktree list` and confirm a line starting with that path is present. Each line is `<path> <sha> [<branch>]`; do not pass `--porcelain` (command wrappers in some setups strip it — the default format carries everything this command needs).
 3. If confirmed, `cd` into that path before continuing — the rest of this command (and any follow-up command) now operates inside the worktree.
-4. If `Worktree Path` is empty (project set up before this property existed) or the path no longer matches a real worktree, fall back to: run `git worktree list` and find the line whose `[<branch>]` is `[feature/[slug]]`. If found, `cd` into its path. If no worktree exists at all for this branch, tell the user the feature predates the worktree convention and continue in the current directory.
+4. If the `worktree:` field is empty or the path no longer matches a real worktree, fall back to: run `git worktree list` and find the line whose `[<branch>]` is `[feature/[slug]]`. If found, `cd` into its path. If no worktree exists at all for this branch, tell the user the feature predates the worktree convention and continue in the current directory.
 
 ## Step 3 — Clarifying questions
 
@@ -139,42 +140,52 @@ Worktree created at .worktrees/[feature-slug]/
 You can continue here (this session just moved into it), or open a new Claude Code session pointed at that path to work on it in parallel with something else.
 ```
 
-## Step 7 — Register in Notion
+## Step 7 — Register in docs/kanban/
 
-Use the Notion MCP to create a new page in the database (read `database_id` from `.sdd-notion.json`) with these properties:
+Everything below runs inside the worktree (`.worktrees/[feature-slug]/`).
 
-- **Name**: [Feature Name]
-- **Type**: Feature
-- **Status**: Planned
-- **Slug**: [feature-slug]
-- **Branch**: feature/[feature-slug]
-- **Worktree Path**: .worktrees/[feature-slug] (if this property doesn't exist on the database yet — project set up before this version — skip it silently)
-- **Tasks Done**: 0
-- **Tasks Total**: 0
-- **Priority**: Medium (adjust if the user specified otherwise)
+Create `docs/kanban/` if it does not exist. Then write `docs/kanban/feature-[feature-slug].md`:
 
-Then append the following content block to the newly created Notion page:
+```markdown
+---
+name: [Feature Name]
+type: feature
+status: planned
+slug: [feature-slug]
+branch: feature/[feature-slug]
+worktree: .worktrees/[feature-slug]
+priority: medium
+spec: specs/[feature-slug]/
+tasks_done: 0
+tasks_total: 0
+pr:
+created: [YYYY-MM-DD]
+updated: [YYYY-MM-DD]
+---
 
+## Notes
+
+[Optional freeform context. Leave empty if nothing to add.]
 ```
-Spec path: specs/[feature-slug]/
-```
+
+Set `priority` to `low` / `medium` / `high` per what the user specified (default `medium`). Use today's date for `created` and `updated`.
 
 ## Step 8 — Commit
 
 Run inside the worktree (`.worktrees/[feature-slug]/`):
 
 ```bash
-git add specs/[feature-slug]/prd.md
+git add specs/[feature-slug]/prd.md docs/kanban/feature-[feature-slug].md
 git commit -m "docs: add PRD for [feature-slug]"
 ```
 
 ## Constraints
 
-- **Notion check first** — always query Notion for duplicate slug before creating any folder
+- **Duplicate check first** — check `docs/kanban/feature-[slug].md` and `git worktree list` for the branch before creating any folder
 - **Questions first** — never skip to drafting
 - **Present before saving** — explicit approval required
 - **Focus on WHAT and WHY** — no technical implementation details
 - **Worktree required** — always create `.worktrees/[slug]` with branch `feature/[slug]` after saving; never plain `git checkout -b` in the current directory
 - **Idempotent worktree creation** — check for an existing worktree/branch before creating one; never fail on a re-run
-- **Commit required** — commit only `prd.md` with `docs:` prefix
-- **Notion registration required** — create Notion page after every approved PRD
+- **Commit required** — commit `prd.md` and the `docs/kanban/` entry together with `docs:` prefix
+- **Kanban entry required** — create `docs/kanban/feature-[slug].md` (status `planned`) after every approved PRD
