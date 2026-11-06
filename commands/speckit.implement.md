@@ -1,5 +1,5 @@
 ---
-description: Implement one task at a time. Runs tests before presenting to the user. Requires explicit validation before committing. Two commits per task — code first, tracking files second.
+description: Execute approved tasks continuously with one atomic commit per task and one independent final review.
 ---
 
 ## User Input
@@ -8,126 +8,58 @@ description: Implement one task at a time. Runs tests before presenting to the u
 $ARGUMENTS
 ```
 
-## Step 1 — Identify the task
+## Step 1 — Load the execution contract
 
-If not specified in `$ARGUMENTS`, check the current git branch name for `feature/[slug]` and infer the feature from it. Then ask which task number to implement.
+Resolve `.specify/presets/sdd-workflow/` in this checkout or the primary checkout
+from `git worktree list`. Read `references/workflow.md` there (once per session;
+reload after compaction/update). It defines formats, approvals, incremental review,
+proofs and delivery. Use its `scripts/sdd.py` with `--root [active-worktree]`.
+Read applicable project rules and only context relevant to this command.
 
-Target file: `specs/[feature-slug]/[N]_task.md`
+## Step 2 — Start or resume
 
-## Step 2 — Load mandatory context
+Resolve the existing feature worktree and slug. Read the approved PRD and current
+task document (tasks.md for full; PRD for small), relevant techspec/SDD sections and
+applicable project rules. Reconcile Git, task statuses and Handoff; skip done tasks.
+Migrate legacy N_task.md through tasks first. Respect an explicitly requested task
+range; otherwise execute all remaining tasks sequentially.
 
-Read before writing any code:
-1. `specs/[feature-slug]/[N]_task.md` — requirements, subtasks, acceptance criteria
-2. `specs/[feature-slug]/techspec.md` — technical decisions for the feature
-3. `docs/core/sdd.md` — base architecture, conventions, project structure (if it exists)
+Before the first code edit run `sdd.py ready [slug]` and project baseline checks.
+On resumption keep a valid execution.json plan; if definitions changed, analyze
+and run ready again before continuing. A changed decision needs fresh approval.
+Set Kanban to `in-progress`; preserve other state and existing PR metadata.
 
-**Do not skip this step.** The `sdd.md` contains critical naming conventions, import patterns, and structural rules.
+## Step 3 — Implement, gate and commit each task
 
-## Step 3 — Mark the kanban entry In Progress (first task only)
+Follow the contract's Execute cycle. Read the current task and impacted contracts,
+state approach briefly, implement the code and outcome-based tests, then run
+`sdd.py gate [slug] --task Tn`. Fix failures before proceeding. Mark Status done,
+recompute counters and commit implementation, tests and tracking together with a
+Conventional Commit. Use explicit file paths. Continue to the next available task
+without another permission question. Stop on scope decisions or unresolved checks.
 
-In `docs/kanban/feature-[feature-slug].md` frontmatter: if `status` is `ready`, set it to `in-progress` and bump `updated:` to today.
+## Step 4 — Verify the completed feature
 
-Skip this step if `status` is already `in-progress`. Commit this change together with the tracking commit in Step 8.
+Run required user journeys/visual checks and `sdd.py prove [slug]`. Dispatch one
+fresh independent reviewer with the bounded context defined in the contract;
+record its actual identity and per-AC evidence in verification.json. Fix all valid
+findings, commit the fixes, rerun affected proofs and verify the corrections and
+impacts. Keep the reviewer findings and annotate closures with commits/evidence.
+Run `sdd.py finish [slug]`. Failures keep the feature incomplete; report remaining
+blockers instead of starting another full audit loop.
 
-## Step 4 — Implement the task
+## Step 5 — Deliver
 
-Follow the requirements and subtasks from `[N]_task.md`. For each subtask:
-1. Implement the code
-2. Mark `- [x]` in `[N]_task.md` (real-time progress)
-
-Follow conventions from `docs/core/sdd.md` if it exists.
-
-## Step 5 — Test gate
-
-After implementing all subtasks, run the project's tests.
-
-Identify the test framework in use (check `package.json`, `pyproject.toml`, or config files) and run:
-- Unit tests
-- Integration tests (if applicable)
-- Typecheck and lint (if configured)
-
-**If any test fails:** fix it before proceeding. Never present code with failing tests.
-
-## Step 6 — Present for user validation
-
-```
-Task N.0 implemented. Here is what was done:
-
-[Summary of modified files and resulting behavior]
-
-Tests: ✓ passing
-
-Can you validate so I can commit?
-```
-
-**Wait for explicit validation. Do not commit without approval.**
-
-## Step 7 — Implementation commit (after approval)
-
-Commit **only the code files** — do not include `tasks.md`:
-
-```bash
-git add [task code files]
-git commit -m "feat: [concise description]"
-```
-
-Use the appropriate conventional prefix (`feat:`, `fix:`, `refactor:`, etc.).
-
-## Step 8 — Update tracking and commit separately
-
-1. Mark `- [x]` for the task in `specs/[feature-slug]/tasks.md`
-2. In `docs/kanban/feature-[feature-slug].md` frontmatter: set `tasks_done:` to K+1, bump `updated:` to today, and apply the Step 3 `status: in-progress` change if it hasn't been committed yet.
-3. **Commit immediately:**
-
-```bash
-git add specs/[feature-slug]/tasks.md docs/kanban/feature-[feature-slug].md
-git commit -m "docs: mark task N.0 as done"
-```
-
-**Never leave `tasks.md` or the kanban entry modified without committing.**
-
-## Step 9 — Create PR (last task only)
-
-If this is the last task of the feature:
-
-```bash
-gh pr create \
-  --title "feat: [feature name]" \
-  --body "## What was implemented
-[Description]
-
-## How to test
-[Steps to validate manually]"
-```
-
-After the PR is created, in `docs/kanban/feature-[feature-slug].md` frontmatter set:
-- `status: in-review`
-- `pr:` [URL returned by gh pr create]
-- `updated:` today
-
-Commit it:
-
-```bash
-git add docs/kanban/feature-[feature-slug].md
-git commit -m "docs: [feature-slug] in review"
-```
-
-## Step 10 — Report and wait for approval
-
-```
-Task N.0 committed.
-Kanban: [feature-slug] — K/N tasks completed. docs/kanban/feature-[feature-slug].md updated.
-
-Next task: N+1.0 — [Title].
-Can I proceed?
-```
+Commit the review/proof records and report behavior, checks and reviewer outcome.
+If push/PR delivery is authorized in this session, push first, reuse/create a PR
+with --body-file, then save in-review + URL, commit the metadata and push again.
+Otherwise leave a verified local result and request only missing remote authority.
+Human merge/cleanup uses the extension's finish command. Record phase usage and
+interventions when available; use null for unavailable token counts.
 
 ## Constraints
 
-- **Mandatory context:** read `sdd.md` (if exists), `[N]_task.md`, and `techspec.md` before any code
-- **Test gate:** tests passing before presenting to user
-- **Human gate:** explicit approval before any commit
-- **Two commits per task:** 1st commit = code; 2nd commit = `tasks.md` + kanban entry
-- **Tracking always committed:** never leave `tasks.md` or the kanban entry modified without committing
-- **Kanban update required:** bump `tasks_done` after every task; set `status: in-review` and `pr:` on the last task
-- **No automatic advance:** wait for approval before the next task
+- Scope and plan approval replace per-task commit/advance prompts.
+- One task commit includes code, tests and tracking; metadata-only delivery commits
+  are allowed for final evidence and PR linkage.
+- One independent review per completed feature; all valid findings must close.

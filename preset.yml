@@ -3,14 +3,14 @@ schema_version: "1.0"
 preset:
   id: "sdd-workflow"
   name: "SDD Workflow"
-  version: "2.0.0"
-  description: "Replaces spec-kit core commands with an opinionated SDD workflow: feature PRD, clarify, techspec, analyze, tasks, and implementation with mandatory human approval gates, conventional commits, and local Kanban tracking. Features live under specs/[slug]/; status and history are tracked in docs/kanban/feature-[slug].md (one markdown file per item, git log as the audit trail). No external services."
+  version: "3.0.0"
+  description: "Adaptive SDD workflow with milestone approvals, consolidated tasks, incremental analysis, deterministic local checks, atomic commits and independent final review."
   author: "Felipe Faustini"
   repository: "https://github.com/fabfdev/spec-kit-preset-sdd-workflow"
   license: "MIT"
 
 requires:
-  speckit_version: ">=0.1.0"
+  speckit_version: ">=0.9.0"
 
 provides:
   templates:
@@ -23,7 +23,7 @@ provides:
     - type: "command"
       name: "speckit.clarify"
       file: "commands/speckit.clarify.md"
-      description: "Identify ambiguities in the feature PRD with up to 5 targeted questions and encode answers back into prd.md"
+      description: "Resolve remaining PRD decisions in grouped rounds and patch affected sections"
       replaces: "speckit.clarify"
 
     - type: "command"
@@ -35,19 +35,19 @@ provides:
     - type: "command"
       name: "speckit.analyze"
       file: "commands/speckit.analyze.md"
-      description: "Validate cross-artifact consistency between prd.md, techspec.md, and tasks.md. Read-only report."
+      description: "Validate cross-artifact consistency between prd.md, techspec.md, and tasks.md. Persistent incremental review and targeted corrections."
       replaces: "speckit.analyze"
 
     - type: "command"
       name: "speckit.tasks"
       file: "commands/speckit.tasks.md"
-      description: "Break down a techspec into implementation tasks with approval gate before generating files"
+      description: "Create consolidated tasks and approve technical decisions and task plan together"
       replaces: "speckit.tasks"
 
     - type: "command"
       name: "speckit.implement"
       file: "commands/speckit.implement.md"
-      description: "Implement one task at a time with test gate, human validation, and two-commit tracking"
+      description: "Implement one task at a time with test gate, continuous approved execution, atomic tracking, and independent final review"
       replaces: "speckit.implement"
 
 tags:

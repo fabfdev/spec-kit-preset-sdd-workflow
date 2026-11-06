@@ -1,332 +1,181 @@
 # spec-kit-preset-sdd-workflow
 
-A [Spec Kit](https://github.com/github/spec-kit) preset that replaces the four core workflow commands — and customizes `clarify` and `analyze` — with an opinionated **Spec-Driven Development (SDD)** workflow.
+A GitHub Spec Kit preset replacing six core commands with an adaptive SDD workflow.
+It reduces repeated context and approval interruptions while retaining explicit
+scope, requirement traceability, executable checks and independent final review.
 
----
+| Command | Responsibility |
+|---------|----------------|
+| `/speckit.specify` | Scope PRD, adaptive size, worktree and scope approval |
+| `/speckit.clarify` | Resolve remaining decisions and patch affected sections |
+| `/speckit.plan` | Technical draft for full work |
+| `/speckit.tasks` | Consolidated task plan and combined technical approval |
+| `/speckit.analyze` | Incremental semantic review and targeted correction |
+| `/speckit.implement` | Continuous approved execution, atomic commits and final review |
 
-## Standard spec-kit vs. with this preset
+Companion: [SDD Workflow extension](https://github.com/fabfdev/spec-kit-extension-sdd-workflow)
+adds inception, maintenance, bulk installation updates and worktree closure.
 
-| Aspect | Standard spec-kit | + SDD Workflow Preset |
-|--------|------------------|-----------------------|
-| Feature spec file | `spec.md` (generic) | `prd.md` (product-focused, with RF-XX requirements) |
-| Technical plan file | `plan.md` | `techspec.md` (interfaces, data model, testing strategy) |
-| Task files | `tasks.md` (flat list) | `tasks.md` + individual `N_task.md` per task |
-| Directory | `specs/NNN/` | `specs/[slug]/` (readable slug, no numeric prefix) |
-| Isolation | Not managed | Auto-creates a dedicated git worktree (`.worktrees/[slug]`) on branch `feature/[slug]` |
-| Approval gates | Not enforced | Required before every file save and every commit |
-| Commit style | Not enforced | Conventional commits (`feat:`, `docs:`, `fix:`, `refactor:`) |
-| Progress tracking | Not included | Local `docs/kanban/feature-[slug].md` (one markdown file per item) updated at every phase; `git log` is the history |
-| Implementation commits | Single commit | Two-commit discipline: code first, tracking second |
-| Architecture context | `memory/constitution.md` (principles) | `docs/core/sdd.md` (architecture, stack, conventions) |
-| `clarify` command | Generic spec ambiguity scan | Adapted for PRD: scans RF-XX, user scenarios, business rules |
-| `analyze` command | `spec/plan/tasks` consistency | `prd/techspec/tasks` consistency — `sdd.md` is authoritative |
+## Workflow v3
 
----
-
-## Workflow diagram
-
-```mermaid
-flowchart TD
-    SP["/speckit.specify\nCreate feature PRD"]
-    SP --> F1["specs/slug/prd.md\ndocs/kanban/feature-slug.md\nworktree: .worktrees/slug (branch feature/slug)\nstatus: planned"]
-
-    F1 --> CL["/speckit.clarify ✦ optional\nRefine PRD ambiguities"]
-    CL --> F1b["prd.md updated\ncommit: docs: clarify PRD"]
-
-    F1b --> PL["/speckit.plan\nCreate techspec"]
-    PL --> F2["specs/slug/techspec.md\nstatus: specced"]
-
-    F2 --> AN["/speckit.analyze ✦ read-only\nValidate consistency"]
-    AN --> CHK{Issues?}
-    CHK -->|CRITICAL| FIX["Fix in /speckit.specify\nor /speckit.plan"]
-    FIX --> PL
-    CHK -->|None / LOW| TA["/speckit.tasks\nGenerate task files"]
-
-    TA --> F3["specs/slug/tasks.md\n+ 1_task.md ... N_task.md\nstatus: ready"]
-
-    F3 --> IM["/speckit.implement N\nImplement task N"]
-    IM --> C1["commit 1: code only\nfeat/fix/refactor"]
-    C1 --> C2["commit 2: tracking\ntasks.md + docs/kanban entry"]
-    C2 --> MORE{More tasks?}
-    MORE -->|Yes| IM
-    MORE -->|No| PR["speckit.sdd-workflow.finish\nmerge PR, remove worktree, status: completed"]
+```text
+setup → product-prd → sdd                         # project inception, as needed
+specify → [clarify] → [plan → tasks] → analyze → implement → finish
 ```
 
----
+`analyze` runs **after tasks**, including inline tasks for small work.
 
-## Commands
-
-| Command | Artifact produced | Description |
-|---------|------------------|--------------|
-| `/speckit.specify` | `specs/[slug]/prd.md` | Drafts the feature PRD with RF-XX requirements, creates a dedicated worktree (`.worktrees/[slug]`) on branch `feature/[slug]`, and registers it in `docs/kanban/feature-[slug].md` |
-| `/speckit.clarify` | updates `prd.md` | Scans PRD for ambiguity, asks up to 5 targeted questions one at a time, encodes answers back into prd.md |
-| `/speckit.plan` | `specs/[slug]/techspec.md` | Translates PRD into technical decisions — reads `sdd.md` when available |
-| `/speckit.analyze` | report (no file) | Read-only consistency check across prd + techspec + tasks; `sdd.md` conflicts are always CRITICAL |
-| `/speckit.tasks` | `tasks.md` + `N_task.md` | Presents high-level task list for approval, then generates individual task files with acceptance criteria |
-| `/speckit.implement` | code | Implements one task at a time: test gate → human validation → code commit → tracking commit |
-
-`clarify`, `plan`, and `tasks` also check whether the feature's branch is already checked out in another worktree before touching git — if so, they point you at the worktree path instead of failing with a raw git error.
-
-To close out a finished feature (merge its PR, remove the worktree, update the kanban entry, return to `main`), or to see and switch between everything currently in progress, use the companion extension's `/speckit.sdd-workflow.finish` and `/speckit.sdd-workflow.worktrees` — see below.
-
----
-
-## How to install
-
-### Prerequisites
-
-- [Spec Kit CLI](https://github.com/github/spec-kit) installed
-- A project initialized with `specify init`
-
-### Install the preset only
-
-```bash
-specify preset add sdd-workflow \
-  --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/v2.0.0.zip
-```
-
-### Install preset + companion extension (recommended)
-
-The extension adds product PRD, architecture document, bug/tech-debt tracking, and worktree lifecycle commands (list, switch, finish). Together they form the full SDD workflow.
-
-```bash
-# replace core commands with SDD workflow
-specify preset add sdd-workflow \
-  --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/v2.0.0.zip
-
-# add inception, health, and worktree lifecycle commands
-specify extension add sdd-workflow \
-  --from https://github.com/fabfdev/spec-kit-extension-sdd-workflow/archive/refs/tags/v2.0.0.zip
-```
-
----
-
-## How to use
-
-### Project inception (run once per project)
-
-If you installed the companion extension:
-
-```
-/speckit.sdd-workflow.setup          → scaffolds docs/ structure, incl. docs/kanban/ (local tracking)
-/speckit.sdd-workflow.product-prd    → docs/core/prd.md  (vision, personas, business rules)
-/speckit.sdd-workflow.sdd            → docs/core/sdd.md  (stack, architecture, conventions)
-```
-
-These two files are optional but unlock the full intelligence of the preset commands — they read `prd.md` and `sdd.md` to avoid redundant questions and generate consistent output.
-
-### Feature cycle (repeat per feature)
-
-```
-/speckit.specify   [description]     → specs/slug/prd.md, worktree .worktrees/slug on branch feature/slug
-/speckit.clarify                     → refines prd.md  (optional, recommended)
-/speckit.plan      [stack hints]     → specs/slug/techspec.md
-/speckit.analyze                     → consistency report  (no files modified)
-/speckit.tasks                       → specs/slug/tasks.md + N_task.md files
-/speckit.implement [N]               → code  (repeat until all tasks done)
-```
-
-Run these from inside the feature's worktree (`cd .worktrees/slug`), or open a new Claude Code session pointed at that path — this lets you work on more than one feature at the same time without branch collisions.
-
-### Closing a feature
-
-With the companion extension installed:
-
-```
-/speckit.sdd-workflow.finish   → merges the PR (squash), removes the worktree, updates the kanban entry, returns to main
-```
-
-### Maintenance
-
-```
-/speckit.sdd-workflow.fix-bug [description]    → registers a bug, worktree on bugfix/[slug], fix → PR
-/speckit.sdd-workflow.fix-debt [description]   → registers tech debt, worktree on refactor/[slug], resolution → PR
-/speckit.sdd-workflow.worktrees                → lists everything in progress, lets you switch into one
-```
-
----
-
-## Usage example
-
-```
-# — Start a new feature —
-/speckit.specify I want to add user login with email and password
-
-  Agent: asks 5 scoping questions, drafts prd.md, waits for approval
-  After approval:
-    → specs/user-auth/prd.md
-    → worktree: .worktrees/user-auth (branch feature/user-auth)
-    → docs/kanban/feature-user-auth.md  (status: planned)
-
-# — Refine ambiguities —
-/speckit.clarify
-
-  Agent: scans prd.md, identifies 2 unclear areas
-  Q1: "Should sessions expire after inactivity? Recommended: Yes, 30 min — industry standard"
-  Q2: "Password minimum length? Suggested: 8 characters — aligns with OWASP"
-  After answers: updates prd.md, shows diff, commits on approval
-    → commit: "docs: clarify PRD for user-auth"
-
-# — Plan the implementation —
-/speckit.plan Use Node.js + Prisma, React + TanStack Query
-
-  Agent: reads prd.md + sdd.md, drafts techspec.md
-  Sections: architecture, data model, interfaces, testing strategy
-  After approval:
-    → specs/user-auth/techspec.md
-    → docs/kanban/feature-user-auth.md  (status: specced)
-
-# — Validate everything before building —
-/speckit.analyze
-
-  Report:
-    MEDIUM | Coverage | prd.md RF-04 (rate limiting) has no task → add in /speckit.tasks
-    No CRITICAL issues — safe to proceed
-
-# — Break into tasks —
-/speckit.tasks
-
-  Agent proposes:
-    1.0 Auth schema and Prisma migrations
-    2.0 Login and session service
-    3.0 React login form and validation
-    4.0 Integration tests
-
-  After approval → generates 4 task files + tasks.md
-  docs/kanban/feature-user-auth.md  (status: ready, tasks_total: 4)
-
-# — Implement one task at a time —
-/speckit.implement 1
-
-  Agent: reads 1_task.md + techspec.md + sdd.md
-  Implements, runs tests
-  Presents: "Task 1.0 done. Tests: ✓ passing. Can you validate?"
-  After validation:
-    → commit 1: "feat: add auth schema and user migration"
-    → commit 2: "docs: mark task 1.0 as done"  (kanban tasks_done: 1)
-
-/speckit.implement 2
-/speckit.implement 3
-/speckit.implement 4
-  → last task: opens PR automatically
-  → docs/kanban/feature-user-auth.md  (status: in-review, pr: <url>)
-
-# — Close it out —
-/speckit.sdd-workflow.finish
-
-  Agent: finds the open PR, confirms, squash-merges + deletes remote branch
-  Removes .worktrees/user-auth, checks out main, pulls
-  docs/kanban/feature-user-auth.md  (status: completed)
-```
-
----
-
-## How to remove
-
-Removing the preset restores Spec Kit's original `specify`, `clarify`, `plan`, `analyze`, `tasks`, and `implement` commands. **Files already generated in `specs/` are not deleted.**
-
-```bash
-specify preset remove sdd-workflow
-```
-
-To also remove the companion extension:
-
-```bash
-specify extension remove sdd-workflow
-```
-
----
-
-## File structure generated
-
-```
-.worktrees/
-  user-auth/            ← dedicated worktree, branch feature/user-auth
-    specs/
-      user-auth/
-        prd.md            ← feature requirements (RF-XX)
-        techspec.md       ← technical decisions
-        tasks.md          ← task checklist
-        1_task.md         ← subtasks + acceptance criteria
-        2_task.md
-        ...
-docs/
-  core/
-    prd.md              ← product PRD (from companion extension)
-    sdd.md              ← architecture doc (from companion extension)
-  health/
-    scan.md             ← health scan guide (from companion extension)
-  kanban/
-    README.md           ← schema + status lifecycle (from companion extension)
-    feature-user-auth.md ← one file per work item: frontmatter + notes; git log is the history
-```
-
----
-
-## Status lifecycle
-
-Tracked in `docs/kanban/feature-[slug].md` frontmatter (`status:`). The file is committed with the feature, so `git log docs/kanban/feature-[slug].md` is the full history.
-
-| `status` | Triggered by |
+| Decision | v3 behavior |
 |----------|-------------|
-| `planned` | `/speckit.specify` |
-| `specced` | `/speckit.plan` |
-| `ready` | `/speckit.tasks` |
-| `in-progress` | `/speckit.implement` (first task) |
-| `in-review` | `/speckit.implement` (last task, PR opened) |
-| `completed` | `/speckit.sdd-workflow.finish` (PR merged) |
+| Small work | Up to three obvious atomic tasks; PRD with inline plan/checks |
+| Full work | PRD, techspec and one consolidated tasks.md |
+| Human milestones | Scope approval, then technical decisions and tasks together |
+| Execution | Continue approved tasks sequentially; pause for new decisions/blockers |
+| Task commit | Code + tests + tracking in one atomic Conventional Commit |
+| Analysis | Persistent fingerprints; review changes and impacts; targeted corrections |
+| Findings | Every valid finding closes, including LOW/MEDIUM; justified dismissals retained |
+| Validation | Python checks structure/freshness; agents judge semantics and test adequacy |
+| Final review | One fresh independent reviewer per feature, bug or debt item |
+| Remote delivery | Follow explicit session authority; merge/cleanup through finish |
 
-`abandoned` is available at any point for work that is dropped.
+A small PRD containing its plan needs one combined approval. Existing project
+rules and binding designs remain applicable. A changed approved decision needs
+renewed approval; mechanical corrections do not.
 
----
+### Incremental analysis
 
-## Migrating from v1.x (Notion)
+The first review covers the feature's complete scope. Later runs compare input
+hashes, review changed sections and their dependent requirements/contracts, and
+retain prior findings and closure evidence. Changes to architecture, product
+requirements, project rules or runtime force a full review. Broader impact can
+also request one explicitly. Inputs include declared task files and additional
+sources/configuration supplied with `--include`.
 
-v1.x tracked status and history in a Notion Kanban database. v2 tracks everything locally in `docs/kanban/`. If you have a v1.x project, install the companion extension v2 and run `/speckit.sdd-workflow.import-notion` once — it reads your existing Notion board and writes one `docs/kanban/<type>-<slug>.md` per item. After that, `.sdd-notion.json` and the Notion database are no longer used.
+Reports live in the feature directory: `analysis-inputs.json`,
+`analysis-review.json`, and accepted `analysis.json`. `execution.json` binds the
+approved plan; `proofs.json` holds executable results, and `verification.json`
+holds the independent review. Scripts validate structure and freshness, not the
+truth of semantic judgements. Passing checks do not guarantee absence of bugs.
 
----
+### Context and cost
 
-## Updating to a new version
+Read the shared contract once per session and only phase-relevant project context.
+The runtime runs directly; the agent does not need to load its source. Final
+proof commands are deduplicated within each round; per-task checks still run.
+Record exposed token usage and interventions in `usage.jsonl` by phase, including
+independent review separately. Unavailable token counts are null. Compare similar
+changes before/after; no percentage saving is claimed.
 
-```bash
-specify preset remove sdd-workflow
-specify preset add sdd-workflow \
-  --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/vX.Y.Z.zip
+### Requirements and runtime
+
+- Spec Kit CLI **0.9.0+** and an initialized `.specify/` project.
+- Python **3.8+**, standard library only, and Git.
+- A mechanism for a fresh independent review agent/session; otherwise pause for
+  review in a separate session and report the limitation.
+- GitHub CLI for authorized PR delivery and finish.
+
+Both packages ship `scripts/sdd.py` and `references/workflow.md`. Installed paths:
+
+```text
+.specify/presets/sdd-workflow/{scripts/sdd.py,references/workflow.md}
+.specify/extensions/sdd-workflow/{scripts/sdd.py,references/workflow.md}
 ```
 
----
+In linked worktrees without `.specify/`, resolve the package in the primary
+checkout and pass `--root` for the active worktree. The extension's maintenance
+commands work without the preset. Exact artifact formats and runtime commands
+are documented in [the execution contract](references/workflow.md).
 
-## Publishing a new version (maintainer)
+## Installation
 
 ```bash
-# 1. edit commands/, bump version in preset.yml
-git add . && git commit -m "chore: bump preset to vX.Y.Z"
-git push
-
-# 2. create release (no SSH needed)
-gh release create vX.Y.Z \
-  --repo fabfdev/spec-kit-preset-sdd-workflow \
-  --title "vX.Y.Z" \
-  --notes "What changed."
+specify preset add sdd-workflow --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/v3.0.0.zip
+specify extension add sdd-workflow --from https://github.com/fabfdev/spec-kit-extension-sdd-workflow/archive/refs/tags/v3.0.0.zip
 ```
 
----
+For a local checkout, install with `specify preset add sdd-workflow --dev <preset-path>`
+and `specify extension add <extension-path> --dev`. Installing a tag requires that
+release to have been published; local development installation works beforehand.
 
-## Companion extension
+## Migration from v1/v2
 
-This preset pairs with [`spec-kit-extension-sdd-workflow`](https://github.com/fabfdev/spec-kit-extension-sdd-workflow), which adds:
+1. Back up installed packages and generated agent commands/skills. Keep active
+   feature documents and source changes untouched during package installation.
+2. Replace the extension and preset through the CLI; `update_installations.py`
+   automates backup/replacement and updates explicit global skills (see below).
+3. For v1 Notion projects, first run `sdd-workflow.import-notion` after installation
+   to carry the existing board into local records. Keep `.sdd-notion.json` until
+   the migration is checked.
+4. For active work, run tasks once to consolidate legacy `N_task.md` into the new
+   tasks format. Preserve completed tasks, acceptance criteria, references and
+   IDs; approve the migration diff before retiring original files. Do not redo
+   completed implementation. Existing approval without a persisted quote must be
+   reconfirmed rather than fabricated. Inline small work migrates into its PRD.
+5. Run analyze, then resume approved implementation. Old reports cannot establish
+   a v3 semantic baseline. Existing source/tests remain unchanged by installation.
 
-- `/speckit.sdd-workflow.setup` — scaffolds the full `docs/` structure, including `docs/kanban/` (local tracking)
-- `/speckit.sdd-workflow.product-prd` — creates `docs/core/prd.md`
-- `/speckit.sdd-workflow.sdd` — creates `docs/core/sdd.md` (the most critical file)
-- `/speckit.sdd-workflow.fix-bug` — registers bugs in `docs/kanban/bug-[slug].md`, creates a worktree on `bugfix/[slug]`, fixes, opens a PR
-- `/speckit.sdd-workflow.fix-debt` — registers tech debt in `docs/kanban/debt-[slug].md`, creates a worktree on `refactor/[slug]`, resolves it, opens a PR
-- `/speckit.sdd-workflow.worktrees` — lists every active worktree (features, bugs, debt) with its kanban status, lets you switch into one
-- `/speckit.sdd-workflow.finish` — merges the current worktree's PR, removes it, updates the kanban entry, returns to main
-- `/speckit.sdd-workflow.import-notion` — one-time migration from a v1.x Notion board into `docs/kanban/`
+Global `~/.agents/skills/speckit-*` copies are separate from project installations;
+updating only `.specify/` can leave stale global instructions. The updater touches
+only commands owned by these two packages; it preserves unrelated Spec Kit skills.
+Existing global symlinks are retained. Restart/open a new agent session afterwards
+so descriptions already loaded into context are refreshed.
 
----
+### Bulk update (from sibling source checkouts)
+
+The extension ships `scripts/update_installations.py`. It discovers direct child
+projects under `~/AIProjects` with an installed sdd-workflow and the global skill
+copies. Preview is read-only; apply requires writable access to each target:
+
+```bash
+python3 spec-kit-extension-sdd-workflow/scripts/update_installations.py
+python3 spec-kit-extension-sdd-workflow/scripts/update_installations.py --apply
+```
+
+Use repeated `--project <path>` to restrict project targets, `--no-global` to skip
+global skills, or `--global-only` to update only global copies. Local sibling
+sources are the defaults; pass `--source-root <parent-of-both-repositories>` when
+running elsewhere. Each target has a timestamped backup, failed project
+updates restore managed paths, and priority/disabled state is preserved. External
+agent aliases and symlinked .specify configurations stop before replacement. The tool does not commit application changes,
+migrate active features automatically, or publish releases.
+
+## Tracking and worktrees
+
+Artifacts live in `specs/[slug]/`; tracking in `docs/kanban/<type>-<slug>.md`.
+Each item has an isolated branch/worktree and its live worktree record is preferred
+when listing progress. Branch naming follows project conventions when specified.
+Task counters are recomputed from Status fields. Feature status:
+`planned → specced → ready → in-progress → in-review → completed` (small work can
+skip specced). Bug/debt: `reported → in-progress → in-review → resolved`.
+Completion/resolution means a confirmed merged PR; CLOSED without merge preserves
+work. Finish reconciles tracking and unmerged local work before safe cleanup.
+
+Git tracks records; squash keeps their final state on the default branch. Keep
+branch history if intermediate transition commits are required for audit.
+
+## Development and release
+
+```bash
+python3 -m unittest discover -s tests
+```
+
+Publish both reviewed sibling checkouts with:
+
+```bash
+python3 spec-kit-extension-sdd-workflow/scripts/publish_release.py
+python3 spec-kit-extension-sdd-workflow/scripts/publish_release.py --apply
+```
+
+Run these commands from the parent of both repositories. Preview is read-only;
+apply checks both clean default branches and tests, fetches remote state, then
+pushes commits/tags and creates public GitHub releases. Existing drafts are
+published explicitly. Re-running is safe when v3.0.0 tags match the reviewed HEAD.
+
+Test both repositories after syncing shared runtime/protocol/tests. Validate CLI
+installation against a disposable project before publishing. [CHANGELOG.md](CHANGELOG.md)
+records breaking changes; [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md) credits TLC's
+influence. Version 3 changes task formats and approval semantics.
 
 ## License
 
-MIT
+MIT. See acknowledgements for upstream design references.

@@ -1,12 +1,9 @@
 ---
-description: Break down a feature's PRD and techspec into implementation tasks. Requires approval of the high-level task list before generating any files.
+description: Create one consolidated task plan with requirement traceability, executable gates and joint technical approval.
 handoffs:
-  - label: Analyze artifacts first
+  - label: Analyze artifacts
     agent: speckit.analyze
-    prompt: Analyze consistency between PRD, techspec, and tasks for this feature.
-  - label: Implement Tasks
-    agent: speckit.implement
-    prompt: Implement task 1.
+    prompt: Analyze this approved plan before implementation.
 ---
 
 ## User Input
@@ -15,102 +12,58 @@ handoffs:
 $ARGUMENTS
 ```
 
-## Step 1 — Identify the feature
+## Step 1 — Load the execution contract
 
-If not specified in `$ARGUMENTS`, check the current git branch name for `feature/[slug]` and infer from it. If still unclear, ask the user.
+Resolve `.specify/presets/sdd-workflow/` in this checkout or the primary checkout
+from `git worktree list`. Read `references/workflow.md` there (once per session;
+reload after compaction/update). It defines formats, approvals, incremental review,
+proofs and delivery. Use its `scripts/sdd.py` with `--root [active-worktree]`.
+Read applicable project rules and only context relevant to this command.
 
-Verify that both files exist before proceeding:
-- `specs/[feature-slug]/prd.md`
-- `specs/[feature-slug]/techspec.md`
+## Step 2 — Resolve inputs
 
-## Step 1.5 — Verify the branch isn't checked out elsewhere
+Use the feature's existing worktree and approved PRD. For full work require
+`techspec.md`; for small work keep the plan in `prd.md`. Read affected interfaces,
+test configuration and a representative existing test to discover conventions.
 
-Run `git worktree list` (each line is `<path> <sha> [<branch>]`; do not pass `--porcelain` — command wrappers in some setups strip it) and check if `feature/[feature-slug]` appears as a `[<branch>]` in a worktree line.
+For existing v2 work, migrate `tasks.md` and each `N_task.md` into the consolidated
+format in place: preserve task identities in titles/legacy references, subtasks,
+acceptance criteria, completed state and relevant notes. Add stable T/AC IDs and
+traceability. Preserve originals until the migration diff is checked and approved;
+then archive/remove only files whose content was completely carried forward.
+Never rerun completed implementation. Ask about missing behavior, not formatting.
 
-- If it is, and its path differs from the current directory: stop and tell the user:
-  ```
-  This feature has a dedicated worktree at [path].
-  Run this command from there instead of the current directory.
-  ```
-  Do not attempt `git checkout` — Git refuses to check out a branch that's already checked out in another worktree, so it would just fail.
-- If no worktree holds this branch (feature predates the worktree convention, or its worktree was already removed by `/speckit.sdd-workflow.finish`): proceed with the checkout below.
+## Step 3 — Build the task plan
 
-```bash
-git checkout feature/[feature-slug]
-```
+Use the exact contract format: one ## Tn section per atomic deliverable, Status,
+Requirements, Criteria, Depends on, Files and Gate; a Checks table with exactly one
+row per criterion, plus Final gate and relevant technical references.
+Put implementation and its meaningful tests together. Discover real commands from
+project configuration/CI; choose narrow task gates and complete required final
+checks. Capture dependencies explicitly; order by dependencies rather than a
+blanket backend-before-frontend rule. No arbitrary maximum task count.
 
-## Step 2 — Analyze PRD and techspec
+Full work uses only `tasks.md`; small work embeds these sections in `prd.md` and
+promotes to full above three tasks or with architectural uncertainty. Include a
+short context Inputs list for additional files to pass to analyze with --include.
 
-Read both files and extract: requirements, main components, technical decisions, dependencies between parts.
+## Step 4 — Validate and approve
 
-## Step 3 — Present high-level task list for approval
+Run `sdd.py validate [slug] --stage tasks`. Fix structural issues, then present
+scope-preserving technical decisions, task breakdown and verification commands.
+**Wait for approval of the technical plan and tasks together.** Record the actual
+approval line; existing unchanged approval remains valid during mechanical fixes.
+For small work already approved with its PRD, no second approval is needed.
 
-**Required before generating any file.**
+## Step 5 — Commit and analyze
 
-Present the proposed task list in this format:
-
-```
-## Proposed tasks for [feature-slug]
-
-- [ ] 1.0 Task title
-- [ ] 2.0 Task title
-- [ ] 3.0 Task title
-
-Do you approve this structure before I generate the individual files?
-```
-
-**Wait for explicit confirmation before proceeding.**
-
-## Step 4 — Generate task files
-
-After approval:
-
-1. Create `specs/[feature-slug]/tasks.md` with the approved list
-2. For each main task, create `specs/[feature-slug]/[N]_task.md` with this structure:
-
-```markdown
-# Task N.0 — [Title]
-
-## Objective
-[What this task accomplishes.]
-
-## Subtasks
-- [ ] N.1 [Subtask]
-- [ ] N.2 [Subtask]
-- [ ] N.3 Write tests for [scope]
-
-## Acceptance Criteria
-- [ ] [Verifiable criterion]
-- [ ] [Verifiable criterion]
-
-## Technical References
-- Techspec section: [relevant section]
-- Files to modify: [list]
-```
-
-## Step 5 — Update the kanban entry
-
-After generating all files, in `docs/kanban/feature-[feature-slug].md` frontmatter set:
-- `status: ready`
-- `tasks_total:` N (total number of main tasks generated)
-- `updated:` today's date
-
-(If the file does not exist, create it following the schema in `docs/kanban/README.md`.)
-
-## Step 6 — Commit
-
-```bash
-git add specs/[feature-slug]/tasks.md specs/[feature-slug]/*_task.md docs/kanban/feature-[feature-slug].md
-git commit -m "docs: add tasks for [feature-slug]"
-```
+Recompute Kanban tasks_total and tasks_done from Status fields, set `ready` only
+when implementation has not already started, preserve other state. Commit the
+technical plan, consolidated tasks and tracking together with `docs:`. Run
+`analyze` next; implementation requires its accepted result.
 
 ## Constraints
 
-- **High-level list first** — never generate files without explicit approval
-- **Maximum 10 tasks** — group logically
-- **Do not write code** — only specify tasks and criteria
-- **Logical order:** backend before frontend; both before E2E tests
-- **Tests required:** each task must have test subtasks
-- **Branch required** — checkout `feature/[feature-slug]` before generating any file
-- **Commit required** — commit all task files and the kanban entry with `docs:` prefix
-- **Kanban update required** — set `status: ready` and `tasks_total: N` in `docs/kanban/feature-[slug].md` after generating files
+- One source of task truth; counters are derived, never blindly incremented.
+- Every criterion has an executable check and an outcome the reviewer can judge.
+- Approval authorizes sequential local implementation and commits.

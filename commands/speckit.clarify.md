@@ -1,9 +1,5 @@
 ---
-description: Identify underspecified areas in the feature PRD by asking up to 5 targeted clarification questions and encoding answers back into prd.md. Run after /speckit.specify and before /speckit.plan.
-handoffs:
-  - label: Create Techspec
-    agent: speckit.plan
-    prompt: Create the techspec for this feature.
+description: Resolve remaining PRD decisions in grouped rounds and patch affected sections.
 ---
 
 ## User Input
@@ -12,104 +8,40 @@ handoffs:
 $ARGUMENTS
 ```
 
-## Step 0 — Load project context
+## Step 1 — Load the execution contract
 
-Before proceeding, check if these files exist and read them if they do:
+Resolve `.specify/presets/sdd-workflow/` in this checkout or the primary checkout
+from `git worktree list`. Read `references/workflow.md` there (once per session;
+reload after compaction/update). It defines formats, approvals, incremental review,
+proofs and delivery. Use its `scripts/sdd.py` with `--root [active-worktree]`.
+Read applicable project rules and only context relevant to this command.
 
-- `docs/core/prd.md` — product vision, personas, business rules. Skip questions already answered here.
-- `docs/core/sdd.md` — architecture, stack, conventions. Skip questions already answered here.
+## Step 2 — Identify and inspect
 
-## Step 1 — Identify the feature
+Resolve the feature from arguments, current branch or its Kanban record. Require
+`specs/[slug]/prd.md`. Operate in its existing worktree with an explicit cwd.
+Read the PRD and relevant project constraints; inspect code for facts yourself.
+Check testability, error/empty states, business rules, binding sources, scope and
+external failure modes. Ask only questions whose answers materially affect work.
 
-If not specified in `$ARGUMENTS`, check the current git branch name for `feature/[slug]` and infer from it. If still unclear, ask the user.
+## Step 3 — Resolve and persist
 
-Locate `specs/[feature-slug]/prd.md`. If it doesn't exist, stop and instruct the user to run `/speckit.specify` first.
+Ask all currently independent questions in one round, with recommendations; wait
+for the answers before asking dependent questions. Zero questions is valid.
+Patch answers into the affected PRD sections immediately. Keep IDs and unrelated
+text stable. Require scope approval only for changed outcomes/decisions and record
+it truthfully; clear the previous approval while such a change is unapproved.
+Mechanical clarifications within approved decisions need no extra commit gate.
 
-## Step 2 — Verify the branch isn't checked out elsewhere
+## Step 4 — Validate and commit
 
-Run `git worktree list` (each line is `<path> <sha> [<branch>]`; do not pass `--porcelain` — command wrappers in some setups strip it) and check if `feature/[feature-slug]` appears as a `[<branch>]` in a worktree line.
-
-- If it is, and its path differs from the current directory: stop and tell the user:
-  ```
-  This feature has a dedicated worktree at [path].
-  Run this command from there instead of the current directory.
-  ```
-  Do not attempt `git checkout` — Git refuses to check out a branch that's already checked out in another worktree, so it would just fail.
-- If no worktree holds this branch (feature predates the worktree convention, or its worktree was already removed by `/speckit.sdd-workflow.finish`): proceed with the checkout below.
-
-```bash
-git checkout feature/[feature-slug]
-```
-
-## Step 3 — Scan the PRD for ambiguity
-
-Read `specs/[feature-slug]/prd.md` in full.
-
-Run an internal ambiguity scan across these categories. For each, mark internally: **Clear / Partial / Missing**.
-
-- **Functional scope**: Are requirements testable? Any vague verbs ("handle", "manage", "support") without measurable criteria?
-- **Out of scope**: Is it explicit enough to prevent scope creep during techspec?
-- **User scenarios**: Are edge cases, error states, and empty states covered?
-- **Business rules**: Are constraints quantified, or left open to interpretation?
-- **Dependencies**: Are external systems and their failure modes described?
-- **Open questions**: Does `## 8. Open Questions` have items that block planning?
-
-Do not output the raw scan. Use it internally to prioritize questions.
-
-## Step 4 — Generate up to 5 targeted questions
-
-Select at most 5 questions where the answer would materially change the techspec or implementation.
-
-A question qualifies if its answer affects:
-- Architecture or data modeling decisions
-- Task decomposition or ordering
-- Acceptance criteria testability
-- UX behavior or error handling strategy
-
-Skip questions about stylistic preferences. Skip questions already answered in `docs/core/prd.md` or `docs/core/sdd.md`. If the PRD is already complete, asking 0–2 questions is valid.
-
-## Step 5 — Interactive questioning (one at a time)
-
-Present **EXACTLY ONE question at a time**. Wait for the user's answer before presenting the next.
-
-For questions with discrete options:
-- Show 2–4 mutually exclusive options
-- Recommend the best option with a one-sentence reason
-- Format: `**Recommended:** Option [X] — [reason]`
-- Let the user accept the recommendation or choose another
-
-For open-ended questions:
-- Suggest an answer based on best practices and project context
-- Format: `**Suggested:** [answer] — [reason]`
-- Let the user accept or provide their own answer
-
-## Step 6 — Update prd.md with clarifications
-
-After all questions are answered:
-
-1. Incorporate answers into the relevant sections of `specs/[feature-slug]/prd.md`
-2. Resolve items in `## 8. Open Questions` — remove resolved ones or mark them answered
-3. Add new content only where needed — do not restructure the entire PRD
-4. If a clarification expands scope, add entries to `## 3. Functional Requirements` (RF-XX) and `## 4. User Scenarios`
-
-## Step 7 — Present diff and ask for approval
-
-Show a summary of every section changed and what was added or removed. Wait for explicit approval before committing.
-
-**Do not commit without approval.**
-
-## Step 8 — Commit
-
-```bash
-git add specs/[feature-slug]/prd.md
-git commit -m "docs: clarify PRD for [feature-slug]"
-```
+Run `sdd.py validate [slug] --stage spec`, show the concise diff, and commit the
+changed PRD with `docs:` once required scope approval is recorded. Existing analysis
+will detect its hash change. Continue to plan/tasks for full work or analyze for
+small work; do not regenerate an unchanged plan.
 
 ## Constraints
 
-- **One question at a time** — never dump all questions at once
-- **Max 5 questions** — if the PRD is already complete, fewer is better; zero is valid
-- **Update, don't restructure** — preserve existing section headings and requirement IDs (RF-01, etc.)
-- **Approval required** — show what changed before committing
-- **Read-only until approved** — do not modify prd.md until the user approves
-- **Branch required** — checkout `feature/[slug]` before any file write
+- Find facts in the project; ask the user for unresolved decisions.
+- Preserve approved scope unless a new approval changes it.
+- Fix affected sections, rather than rewriting the document.
