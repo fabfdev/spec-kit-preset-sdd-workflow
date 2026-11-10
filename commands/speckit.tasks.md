@@ -10,11 +10,11 @@ $ARGUMENTS
 
 ## Step 1 — Locate
 
-Slug from `$ARGUMENTS` or the current `feature/[slug]` branch; work in its worktree (`git worktree list`, default format). Require an approved PRD; full size also requires `techspec.md`. Tool: `python3 .specify/presets/sdd-workflow/scripts/sdd.py` (if absent, the same path in the primary checkout — first line of `git worktree list`).
+Slug from `$ARGUMENTS` or the current `feature/[slug]` branch. If not on it, `git switch feature/[slug]` (dirty tree: ask to commit or stash first; branch held by a legacy worktree: work in that path). Require an approved PRD; full size also requires `techspec.md`. Tool: `python3 .specify/presets/sdd-workflow/scripts/sdd.py`.
 
 ## Step 2 — Discover gates
 
-Read the PRD, the techspec (full) and the project's test/lint/typecheck commands from manifests and CI. Choose a narrow gate per task and one complete final gate.
+Read the PRD, the techspec (full) and the project's test/lint/typecheck commands from manifests and CI. Locate code with graphify when `graphify-out/graph.json` exists: `graphify query "[what you need]" --budget 1500` (or `graphify explain "[symbol]"`), then open only the files it names; never read `GRAPH_REPORT.md`. Without a graph, or if a named file no longer exists, search with grep/glob. Choose a narrow gate per task and one complete final gate.
 
 ## Step 3 — Write the plan
 

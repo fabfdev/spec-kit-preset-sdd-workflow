@@ -10,11 +10,11 @@ $ARGUMENTS
 
 ## Step 1 — Locate
 
-Slug from `$ARGUMENTS` or the current `feature/[slug]` branch. Work in the feature's worktree: if `git worktree list` (default format) shows the branch at another path, stop and tell the user to run from there. Require an approved `specs/[slug]/prd.md`. If it says `**Size:** small`, tell the user to run `/speckit.tasks` instead.
+Slug from `$ARGUMENTS` or the current `feature/[slug]` branch. If not on it, `git switch feature/[slug]` (dirty tree: ask to commit or stash first; branch held by a legacy worktree: work in that path). Require an approved `specs/[slug]/prd.md`. If it says `**Size:** small`, tell the user to run `/speckit.tasks` instead.
 
 ## Step 2 — Investigate
 
-Read the PRD and the sections of `docs/core/sdd.md` relevant to this feature (stack, conventions, test framework). Explore only the modules this feature touches and one representative existing test. Look up library documentation only for an API that is new or uncertain here.
+Read the PRD and the sections of `docs/core/sdd.md` relevant to this feature (stack, conventions, test framework). Explore only the modules this feature touches and one representative existing test. Locate code with graphify when `graphify-out/graph.json` exists: `graphify query "[what you need]" --budget 1500` (or `graphify explain "[symbol]"`), then open only the files it names; never read `GRAPH_REPORT.md`. Without a graph, or if a named file no longer exists, search with grep/glob. Look up library documentation only for an API that is new or uncertain here.
 
 ## Step 3 — Decide
 

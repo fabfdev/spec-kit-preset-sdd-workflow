@@ -10,7 +10,7 @@ $ARGUMENTS
 
 ## Step 1 — Locate
 
-Slug from `$ARGUMENTS` or the current `feature/[slug]` branch. Work in the feature's worktree: if `git worktree list` (default format) shows the branch at another path, stop and tell the user to run from there. Require `specs/[slug]/prd.md`; otherwise point to `/speckit.specify`.
+Slug from `$ARGUMENTS` or the current `feature/[slug]` branch. If not on it, `git switch feature/[slug]` (dirty tree: ask to commit or stash first; branch held by a legacy worktree: work in that path). Require `specs/[slug]/prd.md`; otherwise point to `/speckit.specify`.
 
 ## Step 2 — Scan
 

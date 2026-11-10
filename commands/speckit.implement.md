@@ -10,13 +10,13 @@ $ARGUMENTS
 
 ## Step 1 — Pick the task
 
-Slug from `$ARGUMENTS` or the current `feature/[slug]` branch; work in its worktree. `SDD` = `python3 .specify/presets/sdd-workflow/scripts/sdd.py` (same path in the primary checkout if absent). Run `SDD validate [slug]`: it requires recorded approvals and prints the next task. Use the task in `$ARGUMENTS` if given.
+Slug from `$ARGUMENTS` or the current `feature/[slug]` branch. If not on it, `git switch feature/[slug]` (dirty tree: ask to commit or stash first; branch held by a legacy worktree: work in that path). `SDD` = `python3 .specify/presets/sdd-workflow/scripts/sdd.py`. Run `SDD validate [slug]`: it requires recorded approvals and prints the next task. Use the task in `$ARGUMENTS` if given.
 
 Legacy plan with `N_task.md` files: implement from that file, run the project's tests directly instead of `SDD check`, and tick it in `tasks.md`.
 
 ## Step 2 — Load only what this task needs
 
-Read the task section, the PRD criteria it cites, the techspec sections it touches and relevant conventions in `docs/core/sdd.md`. Open the task's Files and their direct collaborators. Do not reread whole documents you do not need.
+Read the task section, the PRD criteria it cites, the techspec sections it touches and relevant conventions in `docs/core/sdd.md`. Open the task's Files and their direct collaborators. Locate code with graphify when `graphify-out/graph.json` exists: `graphify query "[what you need]" --budget 1500` (or `graphify explain "[symbol]"`), then open only the files it names; never read `GRAPH_REPORT.md`. Without a graph, or if a named file no longer exists, search with grep/glob. Do not reread whole documents you do not need.
 
 ## Step 3 — Baseline (first task only)
 

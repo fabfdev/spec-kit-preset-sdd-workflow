@@ -1,5 +1,5 @@
 ---
-description: Create a feature PRD (specs/[slug]/prd.md) with one round of clarifying questions, approval before saving, a dedicated worktree and a kanban entry.
+description: Create a feature PRD (specs/[slug]/prd.md) with one round of clarifying questions, approval before saving, a feature branch and a kanban entry.
 ---
 
 ## User Input
@@ -12,7 +12,7 @@ $ARGUMENTS
 
 Read `docs/core/prd.md` and the `## Contexto do Projeto` section of `docs/core/sdd.md` if they exist; never ask what they already answer. Derive a kebab-case slug.
 
-Duplicate if `docs/kanban/feature-[slug].md` exists or `git worktree list` (default format, no `--porcelain`) shows `[feature/[slug]]`. Then ask: new feature (pick another slug) or continuation (work in that worktree path).
+Duplicate if `docs/kanban/feature-[slug].md` exists or `git branch --list feature/[slug]` prints it. Then ask: new feature (pick another slug) or continuation (switch to that branch).
 
 ## Step 2 — One round of questions
 
@@ -39,15 +39,17 @@ WHAT and WHY only. Choose `small` (≤3 obvious tasks, no new architecture, inte
 
 Every RF needs at least one AC. **Show the draft and wait for explicit approval.** Then add under the title: `**Approved:** YYYY-MM-DD — user: "[their words]"`.
 
-## Step 4 — Worktree and save
+## Step 4 — Branch and save
 
-If `.worktrees/` is not in `.gitignore`, add it and commit `chore: ignore .worktrees/`. Reuse an existing worktree; otherwise (drop `-b` if the branch already exists):
+The working tree must be clean; otherwise ask the user to commit or stash first. Branch from the up-to-date default branch (if the branch already exists, just `git switch feature/[slug]`):
 
 ```bash
-git worktree add .worktrees/[slug] -b feature/[slug]
+git switch [default-branch]
+git pull --ff-only
+git switch -c feature/[slug]
 ```
 
-Inside the worktree save `specs/[slug]/prd.md` and `docs/kanban/feature-[slug].md`:
+Save `specs/[slug]/prd.md` and `docs/kanban/feature-[slug].md`:
 
 ```markdown
 ---
@@ -56,7 +58,6 @@ type: feature
 status: planned
 slug: [slug]
 branch: feature/[slug]
-worktree: .worktrees/[slug]
 priority: medium
 spec: specs/[slug]/
 tasks_done: 0
@@ -74,9 +75,9 @@ git commit -m "docs: add PRD for [slug]"
 
 ## Step 5 — Hand off
 
-Give the worktree path, then: "Run `/clear`, then `/speckit.plan [slug]` (full) or `/speckit.tasks [slug]` (small)."
+"Run `/clear`, then `/speckit.plan [slug]` (full) or `/speckit.tasks [slug]` (small)."
 
 ## Constraints
 
 - Questions in one round; approval before saving; no implementation details.
-- Never `git checkout -b` in the main checkout; re-runs must be idempotent.
+- Never commit feature work on the default branch; re-runs must be idempotent.

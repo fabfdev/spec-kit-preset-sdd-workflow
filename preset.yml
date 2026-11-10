@@ -3,7 +3,7 @@ schema_version: "1.0"
 preset:
   id: "sdd-workflow"
   name: "SDD Workflow"
-  version: "4.0.0"
+  version: "4.1.0"
   description: "Lean SDD workflow: feature PRD with RF/AC IDs, techspec, one consolidated tasks plan, one task per session with a test gate and one commit, human approval of PRD, techspec and tasks. Tracking in docs/kanban/. No external services."
   author: "Felipe Faustini"
   repository: "https://github.com/fabfdev/spec-kit-preset-sdd-workflow"
@@ -17,7 +17,7 @@ provides:
     - type: "command"
       name: "speckit.specify"
       file: "commands/speckit.specify.md"
-      description: "Create a feature PRD with one round of clarifying questions, an approval gate, a worktree and a docs/kanban/ entry"
+      description: "Create a feature PRD with one round of clarifying questions, an approval gate, a feature branch and a docs/kanban/ entry"
       replaces: "speckit.specify"
 
     - type: "command"

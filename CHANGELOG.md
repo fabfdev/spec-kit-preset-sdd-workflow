@@ -1,5 +1,17 @@
 # Changelog
 
+## 4.1.0
+
+- No more git worktrees: `specify` creates `feature/[slug]` from the updated
+  default branch in the main checkout (clean tree required). The other commands
+  `git switch` to the feature branch; a branch still held by a legacy worktree is
+  worked on in that worktree's path.
+- The kanban `worktree:` field is no longer written; existing values are ignored.
+- `sdd.py` is always resolved from the current checkout.
+- Code lookup prefers graphify: when `graphify-out/graph.json` exists, commands
+  run `graphify query "..." --budget 1500` (or `graphify explain`) and open only
+  the files it names, never `GRAPH_REPORT.md`; otherwise grep/glob as before.
+
 ## 4.0.0
 
 Lean rebuild from 2.0.0 that keeps the useful parts of 3.0.0 and drops what
