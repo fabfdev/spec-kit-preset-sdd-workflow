@@ -48,7 +48,7 @@ Set kanban `status: in-review`, `pr: [url]`, commit `docs: [slug] in review` and
 
 ## Step 7 — Stop
 
-Report the task, files and gate result, then: "Task Tn committed (K/N). Run `/clear`, then `/speckit.implement [slug]`." **Never start the next task in this session.**
+Report the task, files and gate result, then: "Task Tn committed (K/N). Run `/clear`, then `/speckit.implement [slug]`." **Never start the next task in this session.** (To run all remaining tasks without `/clear`: `/speckit.sdd-workflow.implement-all [slug]`.)
 
 ## Constraints
 

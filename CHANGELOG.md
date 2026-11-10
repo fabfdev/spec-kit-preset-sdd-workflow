@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.2.0
+
+- `implement` Step 7 points to the extension's `/speckit.sdd-workflow.implement-all`
+  for running all remaining tasks without `/clear` (one fresh subagent per task).
+
 ## 4.1.0
 
 - No more git worktrees: `specify` creates `feature/[slug]` from the updated
