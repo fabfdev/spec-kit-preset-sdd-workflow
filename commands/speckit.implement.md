@@ -1,5 +1,5 @@
 ---
-description: Execute approved tasks continuously with one atomic commit per task and one independent final review.
+description: Implement exactly one task of an approved plan, pass its gate, commit code, tests and tracking together, then stop so the user can /clear.
 ---
 
 ## User Input
@@ -8,58 +8,49 @@ description: Execute approved tasks continuously with one atomic commit per task
 $ARGUMENTS
 ```
 
-## Step 1 — Load the execution contract
+## Step 1 — Pick the task
 
-Resolve `.specify/presets/sdd-workflow/` in this checkout or the primary checkout
-from `git worktree list`. Read `references/workflow.md` there (once per session;
-reload after compaction/update). It defines formats, approvals, incremental review,
-proofs and delivery. Use its `scripts/sdd.py` with `--root [active-worktree]`.
-Read applicable project rules and only context relevant to this command.
+Slug from `$ARGUMENTS` or the current `feature/[slug]` branch; work in its worktree. `SDD` = `python3 .specify/presets/sdd-workflow/scripts/sdd.py` (same path in the primary checkout if absent). Run `SDD validate [slug]`: it requires recorded approvals and prints the next task. Use the task in `$ARGUMENTS` if given.
 
-## Step 2 — Start or resume
+Legacy plan with `N_task.md` files: implement from that file, run the project's tests directly instead of `SDD check`, and tick it in `tasks.md`.
 
-Resolve the existing feature worktree and slug. Read the approved PRD and current
-task document (tasks.md for full; PRD for small), relevant techspec/SDD sections and
-applicable project rules. Reconcile Git, task statuses and Handoff; skip done tasks.
-Migrate legacy N_task.md through tasks first. Respect an explicitly requested task
-range; otherwise execute all remaining tasks sequentially.
+## Step 2 — Load only what this task needs
 
-Before the first code edit run `sdd.py ready [slug]` and project baseline checks.
-On resumption keep a valid execution.json plan; if definitions changed, analyze
-and run ready again before continuing. A changed decision needs fresh approval.
-Set Kanban to `in-progress`; preserve other state and existing PR metadata.
+Read the task section, the PRD criteria it cites, the techspec sections it touches and relevant conventions in `docs/core/sdd.md`. Open the task's Files and their direct collaborators. Do not reread whole documents you do not need.
 
-## Step 3 — Implement, gate and commit each task
+## Step 3 — Baseline (first task only)
 
-Follow the contract's Execute cycle. Read the current task and impacted contracts,
-state approach briefly, implement the code and outcome-based tests, then run
-`sdd.py gate [slug] --task Tn`. Fix failures before proceeding. Mark Status done,
-recompute counters and commit implementation, tests and tracking together with a
-Conventional Commit. Use explicit file paths. Continue to the next available task
-without another permission question. Stop on scope decisions or unresolved checks.
+If no task is done yet: run `SDD check [slug] --baseline`. Report failures that existed before your change; do not fix unrelated code. Set kanban `status: in-progress`.
 
-## Step 4 — Verify the completed feature
+## Step 4 — Implement and gate
 
-Run required user journeys/visual checks and `sdd.py prove [slug]`. Dispatch one
-fresh independent reviewer with the bounded context defined in the contract;
-record its actual identity and per-AC evidence in verification.json. Fix all valid
-findings, commit the fixes, rerun affected proofs and verify the corrections and
-impacts. Keep the reviewer findings and annotate closures with commits/evidence.
-Run `sdd.py finish [slug]`. Failures keep the feature incomplete; report remaining
-blockers instead of starting another full audit loop.
+Implement the code and its tests. Run `SDD check [slug] --task Tn`. Fix and re-run; after 2 failed fix attempts, stop and report the failing output instead of looping.
 
-## Step 5 — Deliver
+## Step 5 — Commit
 
-Commit the review/proof records and report behavior, checks and reviewer outcome.
-If push/PR delivery is authorized in this session, push first, reuse/create a PR
-with --body-file, then save in-review + URL, commit the metadata and push again.
-Otherwise leave a verified local result and request only missing remote authority.
-Human merge/cleanup uses the extension's finish command. Record phase usage and
-interventions when available; use null for unavailable token counts.
+Set the task's `**Status:** done`. In `docs/kanban/feature-[slug].md` set `tasks_done` to the number of done tasks and `updated:`. One commit with explicit paths:
+
+```bash
+git add [code and test files] specs/[slug]/ docs/kanban/feature-[slug].md
+git commit -m "feat: [concise description]"
+```
+
+## Step 6 — Last task only
+
+Run `SDD check [slug] --final`. Ask whether the user wants an independent review; if yes, give one fresh subagent only `git diff [default-branch]...HEAD` and the PRD ACs, and fix valid findings. Write a PR body file, then:
+
+```bash
+git push -u origin feature/[slug]
+gh pr create --title "feat: [feature]" --body-file [body-file]
+```
+
+Set kanban `status: in-review`, `pr: [url]`, commit `docs: [slug] in review` and push.
+
+## Step 7 — Stop
+
+Report the task, files and gate result, then: "Task Tn committed (K/N). Run `/clear`, then `/speckit.implement [slug]`." **Never start the next task in this session.**
 
 ## Constraints
 
-- Scope and plan approval replace per-task commit/advance prompts.
-- One task commit includes code, tests and tracking; metadata-only delivery commits
-  are allowed for final evidence and PR linkage.
-- One independent review per completed feature; all valid findings must close.
+- One task per invocation; test gate must pass before commit.
+- Stay inside the task's scope; scope changes need the user.

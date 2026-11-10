@@ -1,5 +1,5 @@
 ---
-description: Draft technical decisions for full work; resolve only new decisions before task-plan approval.
+description: Create the techspec (specs/[slug]/techspec.md) for a full-size feature with an approved PRD. Small features skip this step.
 ---
 
 ## User Input
@@ -8,43 +8,48 @@ description: Draft technical decisions for full work; resolve only new decisions
 $ARGUMENTS
 ```
 
-## Step 1 — Load the execution contract
+## Step 1 — Locate
 
-Resolve `.specify/presets/sdd-workflow/` in this checkout or the primary checkout
-from `git worktree list`. Read `references/workflow.md` there (once per session;
-reload after compaction/update). It defines formats, approvals, incremental review,
-proofs and delivery. Use its `scripts/sdd.py` with `--root [active-worktree]`.
-Read applicable project rules and only context relevant to this command.
+Slug from `$ARGUMENTS` or the current `feature/[slug]` branch. Work in the feature's worktree: if `git worktree list` (default format) shows the branch at another path, stop and tell the user to run from there. Require an approved `specs/[slug]/prd.md`. If it says `**Size:** small`, tell the user to run `/speckit.tasks` instead.
 
-## Step 2 — Identify the feature
+## Step 2 — Investigate
 
-Resolve slug and actual branch from arguments/current worktree/Kanban. Require an
-approved `prd.md`. Work in the associated worktree; never check out a branch held
-elsewhere. For small work with no architectural uncertainty, keep decisions inline
-and proceed to analyze; promote to full if exploration changes that assessment.
+Read the PRD and the sections of `docs/core/sdd.md` relevant to this feature (stack, conventions, test framework). Explore only the modules this feature touches and one representative existing test. Look up library documentation only for an API that is new or uncertain here.
 
-## Step 3 — Investigate and draft
+## Step 3 — Decide
 
-Read the PRD, relevant SDD sections and affected interfaces/source. Discover test
-commands from manifests and CI. Research current primary library documentation
-only when a new/uncertain API or decision requires it; reuse confirmed context.
-Ask only unresolved technical decisions. Write `techspec.md` with affected modules,
-requirement IDs, interfaces, data changes, failure modes, dependencies and testing
-strategy. Omit irrelevant sections. Retain binding source/design references.
+Ask only unresolved technical decisions (module boundaries, data model, failure modes, test depth) in **one numbered round**, each with a recommendation. Find repository facts yourself.
 
-When invoked to fix analysis findings, patch the named sections and impacted
-contracts; preserve other decisions. An approved decision change invalidates task
-approval and requires new approval. Do not rerun the whole interview.
+## Step 4 — Draft
 
-## Step 4 — Save and continue
+Focus on HOW, citing PRD IDs. Omit sections that do not apply.
 
-Save the technical draft, set Kanban status to `specced` without resetting counters
-or PR data, and continue to `tasks`. **Technical decisions and tasks are approved
-together there.** Commit the plan with that milestone rather than introducing a
-separate approval and commit here.
+```markdown
+# Techspec — [Feature]
+**PRD:** specs/[slug]/prd.md
+
+## 1. Overview and affected modules
+## 2. Data model
+## 3. Interfaces (in the project's language)
+## 4. Data flow and failure modes
+## 5. Dependencies (justify each new one)
+## 6. Testing strategy (unit / integration / e2e; real commands)
+```
+
+**Show the draft and wait for explicit approval.**
+
+## Step 5 — Save and commit
+
+Save `specs/[slug]/techspec.md`. In `docs/kanban/feature-[slug].md` set `status: specced` and `updated:`; keep other fields.
+
+```bash
+git add specs/[slug]/techspec.md docs/kanban/feature-[slug].md
+git commit -m "docs: add techspec for [slug]"
+```
+
+Then: "Run `/clear`, then `/speckit.tasks [slug]`."
 
 ## Constraints
 
-- Respect applicable project architecture constraints and binding designs.
-- Use relevant context and narrow corrections; avoid redundant research.
-- Implementation waits for approved scope and the consolidated plan.
+- No code; only interfaces, models and sequence.
+- Respect MUST-level rules in `docs/core/sdd.md`.

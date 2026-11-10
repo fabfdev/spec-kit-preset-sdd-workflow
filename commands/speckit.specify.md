@@ -1,5 +1,5 @@
 ---
-description: Create an adaptive feature PRD, resolve scope decisions and record approval in an isolated worktree.
+description: Create a feature PRD (specs/[slug]/prd.md) with one round of clarifying questions, approval before saving, a dedicated worktree and a kanban entry.
 ---
 
 ## User Input
@@ -8,61 +8,75 @@ description: Create an adaptive feature PRD, resolve scope decisions and record 
 $ARGUMENTS
 ```
 
-## Step 1 — Load the execution contract
+## Step 1 — Context and slug
 
-Resolve `.specify/presets/sdd-workflow/` in this checkout or the primary checkout
-from `git worktree list`. Read `references/workflow.md` there (once per session;
-reload after compaction/update). It defines formats, approvals, incremental review,
-proofs and delivery. Use its `scripts/sdd.py` with `--root [active-worktree]`.
-Read applicable project rules and only context relevant to this command.
+Read `docs/core/prd.md` and the `## Contexto do Projeto` section of `docs/core/sdd.md` if they exist; never ask what they already answer. Derive a kebab-case slug.
 
-## Step 2 — Resolve the feature and existing work
+Duplicate if `docs/kanban/feature-[slug].md` exists or `git worktree list` (default format, no `--porcelain`) shows `[feature/[slug]]`. Then ask: new feature (pick another slug) or continuation (work in that worktree path).
 
-Derive a kebab-case slug from the request. Search the current branch, Kanban and
-`git worktree list` for existing work; read the live worktree's record first.
-For an explicit continuation, reuse it and preserve state and approved decisions.
-Ask only if new-versus-continuation is ambiguous. Never reset an existing record.
-Follow project branch conventions; persist the actual branch and worktree path.
+## Step 2 — One round of questions
 
-For new work, ensure `.worktrees/` is ignored, then create exactly one worktree
-under the primary checkout: attach an existing branch without `-b`, or create a
-new branch with `-b feature/[slug]`. Use explicit absolute working directories.
-If a dirty existing record must move, copy its exact approved content into the
-worktree with the file tool; preserve the original until safely committed.
+Ask everything in **one numbered round**, each with your recommended answer: problem, affected users, main use cases, out of scope, dependencies, plus up to 5 ambiguities that would change the design (edge cases, error states, measurable rules). Skip what the description already settles.
 
-## Step 3 — Scope and draft
+## Step 3 — Draft
 
-Read relevant product rules and architecture sections. Infer small/full from
-complexity using the contract; explain the choice in one sentence. Ask only
-unanswered decisions about outcomes, boundaries and failure cases. Batch questions
-whose answers are independent; persist answers as they arrive.
+WHAT and WHY only. Choose `small` (≤3 obvious tasks, no new architecture, integration or data/security risk) or `full`.
 
-Write `specs/[slug]/prd.md`: problem, **Size**, RF definitions, AC definitions,
-scenarios/errors, business rules, explicit scope boundaries and binding references.
-For small work, include its atomic inline tasks, Checks and Final gate now.
-For full work, defer technical plan/tasks until after scope approval.
+```markdown
+# PRD — [Feature]
+**Size:** small | full
+**Date:** YYYY-MM-DD
 
-## Step 4 — Validate and approve scope
+## 1. Problem and objectives
+## 2. Requirements
+- RF-01: [requirement]
+- AC-01 (RF-01): When [situation], the system shall [observable outcome].
+## 3. User scenarios (incl. edge and error cases)
+## 4. Business rules
+## 5. Out of scope
+## 6. Dependencies
+```
 
-Run `sdd.py validate [slug] --stage spec` (small: also `--stage tasks`). Repair
-structural issues before presenting. Show the reviewable scope and, for small
-work, its plan. **Wait for scope approval**, then record the user's words and date.
-Save drafts freely; an approval must never be fabricated. A changed approved
-outcome requires renewed approval; continuation alone does not.
+Every RF needs at least one AC. **Show the draft and wait for explicit approval.** Then add under the title: `**Approved:** YYYY-MM-DD — user: "[their words]"`.
 
-## Step 5 — Track and commit
+## Step 4 — Worktree and save
 
-Create `docs/kanban/feature-[slug].md` only if absent, with YAML frontmatter:
-name, type: feature, status: planned, slug, actual branch, worktree, priority:
-medium unless specified, spec: specs/[slug]/, tasks_done: 0, tasks_total, pr,
-created, updated. Quote strings that need YAML escaping. Body: `## Notes`.
-On continuation update only fields changed by this invocation.
+If `.worktrees/` is not in `.gitignore`, add it and commit `chore: ignore .worktrees/`. Reuse an existing worktree; otherwise (drop `-b` if the branch already exists):
 
-Commit the approved PRD and Kanban together with `docs:`. Small work proceeds to
-`analyze`; full work proceeds to `plan`, then `tasks`, then `analyze`.
+```bash
+git worktree add .worktrees/[slug] -b feature/[slug]
+```
+
+Inside the worktree save `specs/[slug]/prd.md` and `docs/kanban/feature-[slug].md`:
+
+```markdown
+---
+name: [Feature]
+type: feature
+status: planned
+slug: [slug]
+branch: feature/[slug]
+worktree: .worktrees/[slug]
+priority: medium
+spec: specs/[slug]/
+tasks_done: 0
+tasks_total: 0
+pr:
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+---
+```
+
+```bash
+git add specs/[slug]/prd.md docs/kanban/feature-[slug].md
+git commit -m "docs: add PRD for [slug]"
+```
+
+## Step 5 — Hand off
+
+Give the worktree path, then: "Run `/clear`, then `/speckit.plan [slug]` (full) or `/speckit.tasks [slug]` (small)."
 
 ## Constraints
 
-- Scope approval is a milestone; file writes are reversible drafts.
-- Preserve IDs, existing worktree state and approvals when resuming.
-- Small work still has explicit criteria, checks and independent final review.
+- Questions in one round; approval before saving; no implementation details.
+- Never `git checkout -b` in the main checkout; re-runs must be idempotent.

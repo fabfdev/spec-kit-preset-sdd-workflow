@@ -1,5 +1,5 @@
 ---
-description: Incrementally review approved artifacts, persist findings, and correct affected sections until every valid finding is closed.
+description: Optional read-only consistency check of a feature's prd.md, techspec.md and tasks before implementation. One pass, one report, modifies nothing.
 ---
 
 ## User Input
@@ -8,55 +8,36 @@ description: Incrementally review approved artifacts, persist findings, and corr
 $ARGUMENTS
 ```
 
-## Step 1 — Load the execution contract
+## Step 1 — Structure
 
-Resolve `.specify/presets/sdd-workflow/` in this checkout or the primary checkout
-from `git worktree list`. Read `references/workflow.md` there (once per session;
-reload after compaction/update). It defines formats, approvals, incremental review,
-proofs and delivery. Use its `scripts/sdd.py` with `--root [active-worktree]`.
-Read applicable project rules and only context relevant to this command.
+Slug from `$ARGUMENTS` or the current `feature/[slug]` branch. Run `python3 .specify/presets/sdd-workflow/scripts/sdd.py validate [slug] --stage tasks` (same path in the primary checkout if absent). Structural errors are CRITICAL findings.
 
-## Step 2 — Scan
+## Step 2 — Read only the feature
 
-Resolve the feature's worktree and slug. Full work requires PRD, techspec and
-consolidated tasks; small work requires PRD with inline tasks. Migrate v2 tasks
-using `tasks` first. Run `sdd.py scan [slug]`, adding --include for relevant source,
-rules, dependency/configuration and binding design files beyond declared inputs.
-Use --full for missing confidence or broad impact. The script writes only analysis
-metadata; scan itself does not approve semantic correctness.
+Read `specs/[slug]/prd.md`, `techspec.md` (full size), the task document, and the MUST-level rules of `docs/core/sdd.md` if it exists. Do not read source code, other features or project config files.
 
-## Step 3 — Semantic review
+## Step 3 — One pass
 
-Follow the contract's full/delta/unchanged rules. Read only changed sections and
-their impacts on a delta; verify all required inputs are accounted for. Check RF
-and AC coverage, data/interface consistency, dependency order, test adequacy,
-applicable MUST constraints, binding designs and scope. New input dependencies
-must be added with --include and rescanned before accepting the result.
+Check:
+- **Coverage:** each RF/AC maps to a task that can actually prove it; no orphan tasks.
+- **Consistency:** terminology, data model and scope agree across documents.
+- **Architecture:** nothing contradicts a MUST in `sdd.md` (always CRITICAL).
+- **Testability:** each AC is observable; each gate can fail when the AC is broken.
+- **Order:** dependencies come before dependents.
 
-Persist a compact cumulative `analysis-review.json` with snapshot, reviewed keys
-and all findings. Each finding needs evidence, location and consequence. Address
-CRITICAL/HIGH/MEDIUM/LOW alike. Dismiss only false positives or out-of-scope items
-with a reason; do not invent extra requirements or report stylistic preferences
-as defects. An unchanged valid accepted analysis is reusable.
+Severity: CRITICAL (blocks baseline function or violates sdd.md), HIGH (conflict, scope violation, untestable AC), MEDIUM, LOW.
 
-## Step 4 — Patch and verify
+## Step 4 — Report inline
 
-For scope-preserving fixes, edit affected sections automatically and check their
-impacts. Preserve stable IDs and prior decisions. If a fix changes approved scope
-or architecture, invalidate that approval and ask only the new decision; wait.
-After changes run scan again, review the delta and retain closure evidence and
-prior finding IDs. Stop incomplete after two unsuccessful automatic correction
-rounds, or on a decision blocker. Do not regenerate all documents.
+```markdown
+## Analyze — [slug]
+| ID | Severity | Location | Finding | Fix |
+|----|----------|----------|---------|-----|
+Verdict: BLOCKED (CRITICAL/HIGH present) | READY (warnings only)
+```
 
-## Step 5 — Accept
-
-Run `sdd.py record-analysis [slug]`; it rejects stale, incomplete or unresolved
-reports. Commit corrected artifacts and the cumulative analysis metadata in one
-`docs:` commit, then report only new/resolved findings and readiness. Any pending
-valid finding blocks implementation. Keep the pending review draft on blockers.
+For BLOCKED, name the command that fixes each finding (`/speckit.clarify`, `/speckit.plan`, `/speckit.tasks`). MEDIUM/LOW are warnings and do not block. Do not loop: run once and stop.
 
 ## Constraints
 
-- Analysis may save reports and apply narrow mechanical corrections.
-- All valid findings must close; absence of findings is not a guarantee of no bugs.
-- Scripts validate structure and freshness; semantic judgement remains required.
+- Read-only: never write files, JSON or reports to disk.

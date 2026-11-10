@@ -1,28 +1,69 @@
-# SDD Workflow authoring repository
+# CLAUDE.md — spec-kit-preset-sdd-workflow
 
-This repository ships agent command templates, references and a Python runtime.
-The Spec Kit installer copies the package into `.specify/`; commands may also be
-materialized as project/global skills. Keep references addressable through the
-installed package, including from linked worktrees whose `.specify/` is absent.
+## What this repo is
 
-## Authoring
+An **authoring repo for a spec-kit preset**. It is not an application. It ships
+`commands/*.md` — prompt templates that spec-kit installs into a *target*
+project as slash commands (`/speckit.specify`, `/speckit.plan`, …), replacing
+spec-kit's core commands with the opinionated SDD workflow described in
+`README.md`.
 
-- Read `references/workflow.md` for the runtime contract and exact document schema.
-- Keep templates as numbered imperative steps with a Constraints recap. Save
-  reviewable drafts; approvals cover scope and technical plan, not file writes.
-- Load only phase-relevant context. Narrow fixes preserve approved decisions.
-- Fenced bash examples must survive command wrappers: use discrete commands,
-  default `git worktree list`, explicit working directories, and body files.
-  Avoid shell substitutions, redirects, heredocs and parsed `--porcelain` output
-  in templates. The Python runtime invokes Git directly and is not wrapper output.
-- Tests: `python3 -m unittest discover -s tests`. Installation smoke checks use
-  the installed Spec Kit CLI against disposable projects.
-- `scripts/sdd.py`, `references/workflow.md`, and `tests/test_sdd.py` are shared
-  byte-identically with the companion repository. Canonical authoring source is
-  the preset; sync the extension copy on every shared change and test both.
-- Kanban is local and current worktree records win. Squash retains the final
-  state only; never claim it preserves intermediate commit transitions.
-- Bump manifest version on shipped changes; align README installation URLs and
-  changelog. Breaking document/approval contracts require a major version.
+- `preset.yml` — manifest: which template replaces which core command, plus `version`.
+- `commands/*.md` — the templates themselves. Each is a full prompt with numbered
+  steps, fenced `bash` blocks showing exact commands, and a `## Constraints` block.
+- Nothing here (including this file) is installed into the target project. Only
+  `commands/*.md` ship. Guidance for the *end user's* agent must live inside the
+  templates.
 
-Companion: `../spec-kit-extension-sdd-workflow`.
+Sibling repo: `../spec-kit-extension-sdd-workflow` (the extension layer —
+product PRD, SDD, bug/tech-debt, worktree lifecycle). Keep conventions in sync.
+
+## Editing the command templates
+
+- **Match the house style**: numbered steps, imperative voice, human approval
+  gates called out in bold, a `## Constraints` recap at the end.
+- **Every template must work with or without a CLI wrapper installed.** Users
+  commonly run [rtk](https://github.com/rtk-ai/rtk) (a `PreToolUse` Bash hook
+  that rewrites `git`, `gh`, `ls`, `grep`, … to compact equivalents). Write shell
+  that survives that rewrite:
+  - **No `git ... --porcelain` for output the template parses.** rtk's
+    `rtk git worktree` drops `--porcelain` and reformats. Parse the default
+    `git worktree list` format instead: `<path> <sha> [<branch>]`, one line each,
+    first line = main worktree. This works identically with and without rtk.
+  - **No command substitution (`$(...)`, backticks), no process substitution,
+    no file redirects (`> f`, `>> f`), no heredocs (`<< EOF`)** in a fenced
+    `bash` block. Any of these makes rtk pass the command through unrewritten
+    (and they make the step harder to reason about). Break the work into
+    discrete commands; use the agent's file-writing tool to create file bodies
+    (e.g. a PR body file for `gh pr create --body-file`), not `>`.
+  - `gh ... --json`, `gh pr merge`, `gh pr create`, `git add/commit`,
+    `git worktree add` are all safe — rtk either passes them through or emits a
+    faithful confirmation line.
+- **Tracking is local (since v2.0.0).** Status and history live in
+  `docs/kanban/feature-[slug].md` — YAML frontmatter for the structured fields
+  (`status`, `slug`, `branch`, `worktree`, `priority`, `tasks_done`,
+  `tasks_total`, `pr`, `created`, `updated`), markdown body for notes. The file
+  is committed with the feature, so `git log` is the audit trail. The schema is
+  documented in `docs/kanban/README.md`, created by the extension's `setup`; the
+  preset commands create `docs/kanban/` on demand so they also work without the
+  extension. No Notion, no MCP, no `.sdd-notion.json` anywhere in the workflow.
+- **Reference-doc reads**: steps that load `sdd.md` / `prd.md` / `techspec.md`
+  for context can use `rtk read <file>` (via Bash) for a first survey pass when
+  rtk is present, but the agent should fall back to its native file-read tool
+  when it needs exact text to edit. Keep this as the end user's judgment call;
+  do not hard-code `rtk` invocations into a template.
+
+## Token budget (since v4.0.0)
+
+- Each `commands/*.md` must stay **≤ 3072 bytes** (`tests/test_command_sizes.py`).
+  Commands are self-contained: no shared contract file that every command loads.
+- Tell the agent to read only the sections a step needs, and ask questions in one
+  numbered round. End each command by telling the user to `/clear`.
+- `implement` runs one task per invocation. No mandatory subagents, no
+  analysis or fix loops, and no machine-written JSON state.
+- `scripts/sdd.py` does only `validate` and `check`. Test: `python3 -m unittest discover -s tests`.
+
+## Versioning
+
+Bump `version` in `preset.yml` on any change to `commands/*.md` or the manifest,
+and update the `v<version>` tag in the README install snippets to match.

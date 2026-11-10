@@ -1,22 +1,29 @@
 # Changelog
 
-## 3.0.0
+## 4.0.0
 
-Breaking workflow update from 2.x:
+Lean rebuild from 2.0.0 that keeps the useful parts of 3.0.0 and drops what
+made sessions expensive.
 
-- Scope and combined technical/task approval replace file/commit/advance gates.
-- Adaptive small work uses a PRD with inline tasks; full work uses one tasks.md.
-- Requirement/acceptance IDs, task dependencies, proof commands and approval
-  records have an explicit machine-checked format. Legacy task files migrate
-  preserving completed work, criteria and IDs; see README.
-- Analyze stores input fingerprints and cumulative finding closure, reviews
-  changed inputs and impacts, and applies narrow scope-preserving corrections.
-- Every valid finding blocks readiness, including LOW/MEDIUM.
-- Sequential execution uses one atomic commit per task including tracking.
-- Local Python gates validate structure/freshness and execute deduplicated final
-  checks. A fresh independent reviewer judges criterion/test evidence once.
-- Repair worktree reuse, dirty maintenance-record transfer, live status reads,
-  PR metadata pushes and CLOSED-versus-MERGED handling before safe cleanup.
-- Runtime and protocol ship in both packages for standalone maintenance use.
+Kept from 3.0.0:
+- PRD `**Size:** small | full`; small features keep up to 3 tasks inline in `prd.md`.
+- RF/AC IDs and one consolidated `tasks.md` with a Checks table (no `N_task.md`).
+- One commit per task (code, tests and tracking together), no per-commit prompt.
+- `scripts/sdd.py validate` for structure, now also printing the next task.
 
-Requires Python 3.8+ and Spec Kit CLI 0.9.0+. No external tracking service.
+Changed:
+- `implement` runs exactly one task and stops, telling the user to `/clear`.
+- `specify` asks its clarifying questions in one round; `clarify` is optional.
+- `analyze` is a single read-only pass over the feature's documents and
+  `sdd.md`; only CRITICAL/HIGH block. No fingerprints, JSON or fix loop.
+- Gates: baseline once, narrow gate per task, full checks once before the PR.
+  `sdd.py check` prints `PASS` or only the last 40 lines of a failure.
+- Independent review is optional, before the PR, with only the diff and the ACs.
+- Each command is self-contained and at most 3 KB (tested).
+
+Removed: `references/workflow.md`, `scan`, `record-analysis`, `ready`, `prove`,
+`finish` runtime gates, tree digests, `proofs.json`, `analysis-*.json`,
+`execution.json`, `verification.json` and `usage.jsonl`. v3 files left in a
+feature folder are ignored. The 4-column v3 Checks table is still accepted.
+
+Requires Python 3.8+ and Spec Kit CLI 0.9.0+.
