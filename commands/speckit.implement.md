@@ -10,7 +10,7 @@ $ARGUMENTS
 
 ## Step 1 — Pick the task
 
-Slug from `$ARGUMENTS` or the current `feature/[slug]` branch; work in its worktree. `SDD` = `python3 .specify/presets/sdd-workflow/scripts/sdd.py` (same path in the primary checkout if absent). Run `SDD validate [slug]`: it requires recorded approvals and prints the next task. Use the task in `$ARGUMENTS` if given.
+Slug from `$ARGUMENTS` or the current `feature/[slug]` branch. If not on it, `git switch feature/[slug]` (dirty tree: ask to commit or stash first; branch held by a legacy worktree: work in that path). `SDD` = `python3 .specify/presets/sdd-workflow/scripts/sdd.py`. Run `SDD validate [slug]`: it requires recorded approvals and prints the next task. Use the task in `$ARGUMENTS` if given.
 
 Legacy plan with `N_task.md` files: implement from that file, run the project's tests directly instead of `SDD check`, and tick it in `tasks.md`.
 

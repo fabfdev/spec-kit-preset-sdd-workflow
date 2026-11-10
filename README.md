@@ -12,7 +12,7 @@ else is loaded on every call.
 
 ```mermaid
 flowchart TD
-    SP["/speckit.specify — PRD, one round of questions, worktree"] --> SZ{Size}
+    SP["/speckit.specify — PRD, one round of questions, branch"] --> SZ{Size}
     SZ -->|full| PL["/speckit.plan — techspec.md"]
     SZ -->|small| TA
     PL --> TA["/speckit.tasks — tasks.md (or inline in prd.md)"]
@@ -30,7 +30,7 @@ and the task state lives in the files, not in the session.
 
 | Command | Produces | Approval |
 |---------|----------|----------|
-| `/speckit.specify` | `specs/[slug]/prd.md`, worktree `.worktrees/[slug]`, `docs/kanban/feature-[slug].md` | PRD |
+| `/speckit.specify` | `specs/[slug]/prd.md`, branch `feature/[slug]`, `docs/kanban/feature-[slug].md` | PRD |
 | `/speckit.clarify` (optional) | patched `prd.md` | if scope changes |
 | `/speckit.plan` (full only) | `techspec.md` | techspec |
 | `/speckit.tasks` | `tasks.md`, or inline tasks for small features | task list |
@@ -68,8 +68,8 @@ python3 .specify/presets/sdd-workflow/scripts/sdd.py check my-feature --final   
 ## Installation
 
 ```bash
-specify preset add sdd-workflow --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/v4.0.0.zip
-specify extension add sdd-workflow --from https://github.com/fabfdev/spec-kit-extension-sdd-workflow/archive/refs/tags/v4.0.0.zip
+specify preset add sdd-workflow --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/v4.1.0.zip
+specify extension add sdd-workflow --from https://github.com/fabfdev/spec-kit-extension-sdd-workflow/archive/refs/tags/v4.1.0.zip
 ```
 
 For a local checkout, use `specify preset add sdd-workflow --dev <path>`. To

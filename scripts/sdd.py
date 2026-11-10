@@ -13,7 +13,7 @@ import sys
 from collections import deque
 from pathlib import Path
 
-VERSION = "4.0.0"
+VERSION = "4.1.0"
 RF = r"RF-\d+(?:\.\d+)*"
 AC = r"AC-\d+"
 TAIL_LINES = 40

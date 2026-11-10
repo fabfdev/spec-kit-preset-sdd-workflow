@@ -16,7 +16,7 @@ spec-kit's core commands with the opinionated SDD workflow described in
   templates.
 
 Sibling repo: `../spec-kit-extension-sdd-workflow` (the extension layer —
-product PRD, SDD, bug/tech-debt, worktree lifecycle). Keep conventions in sync.
+product PRD, SDD, bug/tech-debt, finish). Keep conventions in sync.
 
 ## Editing the command templates
 
@@ -26,10 +26,8 @@ product PRD, SDD, bug/tech-debt, worktree lifecycle). Keep conventions in sync.
   commonly run [rtk](https://github.com/rtk-ai/rtk) (a `PreToolUse` Bash hook
   that rewrites `git`, `gh`, `ls`, `grep`, … to compact equivalents). Write shell
   that survives that rewrite:
-  - **No `git ... --porcelain` for output the template parses.** rtk's
-    `rtk git worktree` drops `--porcelain` and reformats. Parse the default
-    `git worktree list` format instead: `<path> <sha> [<branch>]`, one line each,
-    first line = main worktree. This works identically with and without rtk.
+  - **No `git ... --porcelain` for output the template parses.** rtk drops it
+    and reformats; parse default formats instead.
   - **No command substitution (`$(...)`, backticks), no process substitution,
     no file redirects (`> f`, `>> f`), no heredocs (`<< EOF`)** in a fenced
     `bash` block. Any of these makes rtk pass the command through unrewritten
@@ -37,11 +35,11 @@ product PRD, SDD, bug/tech-debt, worktree lifecycle). Keep conventions in sync.
     discrete commands; use the agent's file-writing tool to create file bodies
     (e.g. a PR body file for `gh pr create --body-file`), not `>`.
   - `gh ... --json`, `gh pr merge`, `gh pr create`, `git add/commit`,
-    `git worktree add` are all safe — rtk either passes them through or emits a
+    `git switch` are all safe — rtk either passes them through or emits a
     faithful confirmation line.
 - **Tracking is local (since v2.0.0).** Status and history live in
   `docs/kanban/feature-[slug].md` — YAML frontmatter for the structured fields
-  (`status`, `slug`, `branch`, `worktree`, `priority`, `tasks_done`,
+  (`status`, `slug`, `branch`, `priority`, `tasks_done`,
   `tasks_total`, `pr`, `created`, `updated`), markdown body for notes. The file
   is committed with the feature, so `git log` is the audit trail. The schema is
   documented in `docs/kanban/README.md`, created by the extension's `setup`; the
@@ -61,6 +59,8 @@ product PRD, SDD, bug/tech-debt, worktree lifecycle). Keep conventions in sync.
   numbered round. End each command by telling the user to `/clear`.
 - `implement` runs one task per invocation. No mandatory subagents, no
   analysis or fix loops, and no machine-written JSON state.
+- No git worktrees (since v4.1.0): each item is a branch in the main checkout.
+  Commands only mention worktrees to work inside a legacy one that holds the branch.
 - `scripts/sdd.py` does only `validate` and `check`. Test: `python3 -m unittest discover -s tests`.
 
 ## Versioning

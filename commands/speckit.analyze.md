@@ -10,7 +10,7 @@ $ARGUMENTS
 
 ## Step 1 — Structure
 
-Slug from `$ARGUMENTS` or the current `feature/[slug]` branch. Run `python3 .specify/presets/sdd-workflow/scripts/sdd.py validate [slug] --stage tasks` (same path in the primary checkout if absent). Structural errors are CRITICAL findings.
+Slug from `$ARGUMENTS` or the current `feature/[slug]` branch; read the files from that branch. Run `python3 .specify/presets/sdd-workflow/scripts/sdd.py validate [slug] --stage tasks`. Structural errors are CRITICAL findings.
 
 ## Step 2 — Read only the feature
 

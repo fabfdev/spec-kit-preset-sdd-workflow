@@ -1,5 +1,14 @@
 # Changelog
 
+## 4.1.0
+
+- No more git worktrees: `specify` creates `feature/[slug]` from the updated
+  default branch in the main checkout (clean tree required). The other commands
+  `git switch` to the feature branch; a branch still held by a legacy worktree is
+  worked on in that worktree's path.
+- The kanban `worktree:` field is no longer written; existing values are ignored.
+- `sdd.py` is always resolved from the current checkout.
+
 ## 4.0.0
 
 Lean rebuild from 2.0.0 that keeps the useful parts of 3.0.0 and drops what

@@ -10,7 +10,7 @@ $ARGUMENTS
 
 ## Step 1 — Locate
 
-Slug from `$ARGUMENTS` or the current `feature/[slug]` branch. Work in the feature's worktree: if `git worktree list` (default format) shows the branch at another path, stop and tell the user to run from there. Require an approved `specs/[slug]/prd.md`. If it says `**Size:** small`, tell the user to run `/speckit.tasks` instead.
+Slug from `$ARGUMENTS` or the current `feature/[slug]` branch. If not on it, `git switch feature/[slug]` (dirty tree: ask to commit or stash first; branch held by a legacy worktree: work in that path). Require an approved `specs/[slug]/prd.md`. If it says `**Size:** small`, tell the user to run `/speckit.tasks` instead.
 
 ## Step 2 — Investigate
 
