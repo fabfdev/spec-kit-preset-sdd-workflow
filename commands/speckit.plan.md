@@ -14,7 +14,7 @@ Slug from `$ARGUMENTS` or the current `feature/[slug]` branch. If not on it, `gi
 
 ## Step 2 — Investigate
 
-Read the PRD and the sections of `docs/core/sdd.md` relevant to this feature (stack, conventions, test framework). Explore only the modules this feature touches and one representative existing test. Look up library documentation only for an API that is new or uncertain here.
+Read the PRD and the sections of `docs/core/sdd.md` relevant to this feature (stack, conventions, test framework). Explore only the modules this feature touches and one representative existing test. Locate code with graphify when `graphify-out/graph.json` exists: `graphify query "[what you need]" --budget 1500` (or `graphify explain "[symbol]"`), then open only the files it names; never read `GRAPH_REPORT.md`. Without a graph, or if a named file no longer exists, search with grep/glob. Look up library documentation only for an API that is new or uncertain here.
 
 ## Step 3 — Decide
 
