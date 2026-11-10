@@ -35,6 +35,7 @@ and the task state lives in the files, not in the session.
 | `/speckit.plan` (full only) | `techspec.md` | techspec |
 | `/speckit.tasks` | `tasks.md`, or inline tasks for small features | task list |
 | `/speckit.analyze` (optional) | an inline report; HIGH/CRITICAL block | — |
+| `/speckit.sdd-workflow.implement-all` (extension, optional) | all remaining tasks, one fresh subagent each; main session keeps only short reports | — |
 | `/speckit.implement` | one task: code, tests and tracking in a single commit; on the last task, the PR | — (the gate replaces it) |
 
 ## Document format
@@ -68,8 +69,8 @@ python3 .specify/presets/sdd-workflow/scripts/sdd.py check my-feature --final   
 ## Installation
 
 ```bash
-specify preset add sdd-workflow --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/v4.1.0.zip
-specify extension add sdd-workflow --from https://github.com/fabfdev/spec-kit-extension-sdd-workflow/archive/refs/tags/v4.1.0.zip
+specify preset add sdd-workflow --from https://github.com/fabfdev/spec-kit-preset-sdd-workflow/archive/refs/tags/v4.2.0.zip
+specify extension add sdd-workflow --from https://github.com/fabfdev/spec-kit-extension-sdd-workflow/archive/refs/tags/v4.2.0.zip
 ```
 
 For a local checkout, use `specify preset add sdd-workflow --dev <path>`. To
