@@ -1,5 +1,5 @@
 ---
-description: Resolve remaining PRD decisions in grouped rounds and patch affected sections.
+description: Optional. Revisit an existing feature PRD with up to 5 targeted questions and encode the answers into prd.md. specify already clarifies new PRDs.
 ---
 
 ## User Input
@@ -8,40 +8,28 @@ description: Resolve remaining PRD decisions in grouped rounds and patch affecte
 $ARGUMENTS
 ```
 
-## Step 1 — Load the execution contract
+## Step 1 — Locate
 
-Resolve `.specify/presets/sdd-workflow/` in this checkout or the primary checkout
-from `git worktree list`. Read `references/workflow.md` there (once per session;
-reload after compaction/update). It defines formats, approvals, incremental review,
-proofs and delivery. Use its `scripts/sdd.py` with `--root [active-worktree]`.
-Read applicable project rules and only context relevant to this command.
+Slug from `$ARGUMENTS` or the current `feature/[slug]` branch. Work in the feature's worktree: if `git worktree list` (default format) shows the branch at another path, stop and tell the user to run from there. Require `specs/[slug]/prd.md`; otherwise point to `/speckit.specify`.
 
-## Step 2 — Identify and inspect
+## Step 2 — Scan
 
-Resolve the feature from arguments, current branch or its Kanban record. Require
-`specs/[slug]/prd.md`. Operate in its existing worktree with an explicit cwd.
-Read the PRD and relevant project constraints; inspect code for facts yourself.
-Check testability, error/empty states, business rules, binding sources, scope and
-external failure modes. Ask only questions whose answers materially affect work.
+Read the PRD (and `docs/core/prd.md` only if a question may already be answered there). Look for untestable requirements, RFs without ACs, missing edge/error cases, unquantified rules, vague out of scope, open questions that block planning. Do not print the scan.
 
-## Step 3 — Resolve and persist
+## Step 3 — Ask
 
-Ask all currently independent questions in one round, with recommendations; wait
-for the answers before asking dependent questions. Zero questions is valid.
-Patch answers into the affected PRD sections immediately. Keep IDs and unrelated
-text stable. Require scope approval only for changed outcomes/decisions and record
-it truthfully; clear the previous approval while such a change is unapproved.
-Mechanical clarifications within approved decisions need no extra commit gate.
+Ask at most 5 questions **in one numbered round**, only those whose answer changes design, tasks or testability. Give a recommended answer for each. Zero questions is valid — say the PRD is ready.
 
-## Step 4 — Validate and commit
+## Step 4 — Update and commit
 
-Run `sdd.py validate [slug] --stage spec`, show the concise diff, and commit the
-changed PRD with `docs:` once required scope approval is recorded. Existing analysis
-will detect its hash change. Continue to plan/tasks for full work or analyze for
-small work; do not regenerate an unchanged plan.
+Patch only the affected sections; keep existing headings and IDs, add new RF/AC IDs at the end. If scope or acceptance outcomes changed, the previous approval is void: **show the diff and wait for approval**, then refresh the `**Approved:**` line with the user's words.
+
+```bash
+git add specs/[slug]/prd.md
+git commit -m "docs: clarify PRD for [slug]"
+```
 
 ## Constraints
 
-- Find facts in the project; ask the user for unresolved decisions.
-- Preserve approved scope unless a new approval changes it.
-- Fix affected sections, rather than rewriting the document.
+- Read-only until the user approves the change.
+- Never restructure the PRD or renumber IDs.
